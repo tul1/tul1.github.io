@@ -1,48 +1,153 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
-	<meta charset="UTF-8">
-	<title>MoRdoR</title>
-	<script src="../js/jquery-2.1.4.min.js"></script>
-	<script src="../js/three.min.js"></script>
-	<script src="../js/loaders/ColladaLoader.js "></script>
-	<script src="../js/controls/OrbitControls.js"></script>
+    <meta charset="UTF-8">
+    <title>testColladaLoader</title>
 </head>
+
+<script src="js/jquery-2.1.4.min.js" type="text/javascript"></script>
+<script src="js/three.min.js" type="text/javascript"></script>
+<script src="js/loaders/ColladaLoader.js " type="text/javascript"></script>
+<script src="js/controls/OrbitControls.js" type="text/javascript"></script>
+
+<script src="js2/multiMesh.js"></script>
 <body>
 
-
 <div id="contenido">
-	<div id="panel3d"></div>
-	<div><h1>Tincho se la come!</h1></div>
+    <div id="panel3d" style="height:600px;width:1000px;">
+    </div>
 </div>
 
+
 <script>
-/*
-    initThreeJS({noLights:true});
-    var e=new Escenario("../models/escenario/");
-    e.startLoad();
+var escena;
+var tiempo;
+var controls;
+var cameraManual;
+var camaraActual;
+var renderer;
 
-    camara.position.x = 100;
-    camara.position.y = 20;
-    camara.position.z = 0;
+function initThreeJS()
+{
+	var cont=$("#contenido");
+	var container = document.getElementById('panel3d');
+	escena = new THREE.Scene();
 
-    controls.target.y=40;
-    controls.update();
-     var fog=new THREE.Fog(0xFFFFFF, 10 ,9000 ) ;
-     escena.fog=fog;
+	cameraManual = new THREE.PerspectiveCamera(fov = 35, cont.width()/cont.height(), 1, 10000);
+	cameraManual.position.x = -10;
+	cameraManual.position.y = 2;
+	cameraManual.position.z = 5;
+	cameraManual.far = 10000;
+
+	camaraActual=cameraManual;
+
+	controls = new THREE.OrbitControls(cameraManual, container);
+	controls.target.y = 2;
+	controls.update();
+
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(cont.width(), cont.height());
+	renderer.setClearColor(0x333333, 1);
+
+	renderer.shadowMapEnabled = true;
+	renderer.shadowMapSoft = true;
+
+	renderer.shadowMapBias = 0.1;
+	renderer.shadowMapWidth = 2048;
+	renderer.shadowMapHeight = 2048;
+
+	$( window ).resize(function() 
+		{
+			renderer.setSize(cont.width(), cont.height());
+		});
+	container.appendChild(renderer.domElement);
+
+	var gridHelper = new THREE.GridHelper( 100, 10 );
+	gridHelper.setColors(new THREE.Color(0.3,0.3,0.3),new THREE.Color(.1,.1,.1));
+	escena.add( gridHelper );
+}
+
+function setupLights()
+{
+	var light = new THREE.AmbientLight( 0x888888 ); // soft white light
+	escena.add( light );
+
+	var pointlight1 = new THREE.PointLight( 0xffffdd, 3, 100 );
+	pointlight1.position.set( 0, 0, 0 );
+	escena.add( pointlight1 );   
+}
+
+var frame=0;
+
+function render()
+{
+	requestAnimationFrame(render);
+	renderer.render(escena, camaraActual);
+	frame++;
+}
+
+var m;
+function init()
+{
+	// ruta a los DAE, ruta a las Texturas
+	m = new MultiMesh("models/","maps/");
+	m.addGeometry("labi.dae");
+	m.addGeometry("pizarron.dae");
+	m.addTexture("pizarron.jpg");
+	m.startLoad();
+
+	m.onAssetsLoaded=function()
+	{
+		var materiales={
+			"pizarron": new THREE.MeshPhongMaterial({
+				color: 0x888888,
+				specular: 0xFFFFFF,
+				shininess: 16,
+				shading: THREE.SmoothShading,
+				map: m.getTexture("pizarron.jpg")
+			}),
+			"labi": new THREE.MeshPhongMaterial({
+				color: 0xCCCCCC,
+				specular: 0x333333,
+				shininess: 1,
+				shading: THREE.SmoothShading,
+				side:THREE.DoubleSide
+			})
+		};
 
 
-    escena.add(e._container);
+		var pizarronMesh = new THREE.Mesh(m.getGeometry("pizarron.dae"), materiales["pizarron"]);	
+		pizarronMesh.rotation.x = Math.PI/2;
+		pizarronMesh.rotation.z = Math.PI;
+		pizarronMesh.updateMatrix();
+		pizarronMesh.matrixAutoUpdate = false;	
+		var pizarron = new THREE.Object3D();
+		pizarron.add(pizarronMesh);
+//		escena.add(pizarron);
 
-	function update(){
-		e.onEnterFrame();
-	    requestAnimationFrame(update);
+//TODO hay un tema con el dae, no se estan importanto bien las dimensiones.
+
+		var labiMesh = new THREE.Mesh(m.getGeometry("labi.dae"), materiales["labi"]);	
+		labiMesh.rotation.x = Math.PI/2;
+		labiMesh.rotation.y = Math.PI;
+		labiMesh.position.y = Math.PI;
+
+		labiMesh.updateMatrix();
+		labiMesh.matrixAutoUpdate = false;	
+		var labi = new THREE.Object3D();
+		labi.add(labiMesh);
+		escena.add(labi);
 	}
-	e.setModo(1);
 
-    render();
-	update();
-*/
+}
+
+
+initThreeJS();
+setupLights();
+init();
+render();
+	
+
 </script>
 
 </body>
