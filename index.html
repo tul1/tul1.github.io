@@ -49,12 +49,6 @@ function initThreeJS()
 	renderer.setSize(cont.width(), cont.height());
 	renderer.setClearColor(0x333333, 1);
 
-	renderer.shadowMapEnabled = true;
-	renderer.shadowMapSoft = true;
-
-	renderer.shadowMapBias = 0.1;
-	renderer.shadowMapWidth = 2048;
-	renderer.shadowMapHeight = 2048;
 
 	$( window ).resize(function() 
 		{
@@ -73,7 +67,7 @@ function setupLights()
 	escena.add( light );
 
 	var pointlight1 = new THREE.PointLight( 0xffffdd, 3, 100 );
-	pointlight1.position.set( 0, 0, 0 );
+	pointlight1.position.set( 10, 50, 10 );
 	escena.add( pointlight1 );   
 }
 
@@ -118,25 +112,25 @@ function init()
 
 		var pizarronMesh = new THREE.Mesh(m.getGeometry("pizarron.dae"), materiales["pizarron"]);	
 		pizarronMesh.rotation.x = Math.PI/2;
-		pizarronMesh.rotation.z = Math.PI;
+//		pizarronMesh.rotation.z = Math.PI;
 		pizarronMesh.updateMatrix();
 		pizarronMesh.matrixAutoUpdate = false;	
 		var pizarron = new THREE.Object3D();
 		pizarron.add(pizarronMesh);
 //		escena.add(pizarron);
 
-//TODO hay un tema con el dae, no se estan importanto bien las dimensiones.
 
 		var labiMesh = new THREE.Mesh(m.getGeometry("labi.dae"), materiales["labi"]);	
-		labiMesh.rotation.x = Math.PI/2;
-		labiMesh.rotation.y = Math.PI;
-		labiMesh.position.y = Math.PI;
+		labiMesh.rotation.x = -Math.PI/2;
+		labiMesh.rotation.z = Math.PI;
 
 		labiMesh.updateMatrix();
 		labiMesh.matrixAutoUpdate = false;	
 		var labi = new THREE.Object3D();
 		labi.add(labiMesh);
 		escena.add(labi);
+
+
 	}
 
 }
