@@ -1,7 +1,7 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>Floor</title>
+	<title>Navigator</title>
 	<style>
 		@font-face {
 			font-family: 'inconsolata';
@@ -49,9 +49,6 @@
 		camera.position.x = 40;
 		camera.lookAt(new THREE.Vector3(40,60,0));
 
-
-
-
 		var renderer = new THREE.WebGLRenderer( { antialias: true } );
 		renderer.setPixelRatio( window.devicePixelRatio );
 		renderer.setSize( window.innerWidth, window.innerHeight );
@@ -59,7 +56,6 @@
 		document.body.appendChild( renderer.domElement );
 
 		var controls = new THREE.OrbitControls( camera, renderer.domElement );
-
 
 
 		var lights = [];
@@ -130,19 +126,24 @@
 
 		var frame=0;
 		var step =0;
+		var subStep=0;
 		var render = function () {
 
 			requestAnimationFrame(render);
 			renderer.render(scene,camera);
 
-			if(step>pathUpdates.length-1)
+			if(step>pathUpdates.length-1){
+				subStep=0;
 				step=0;
+			}
 
 			if(frame%20 == 0){
 				updateFloorState(step);
 				step++;
+				subStep=0;
 			}
-
+			updateNavigatorPosition(step,subStep,20);
+			subStep++;
 			frame++;
 		};
 
@@ -171,6 +172,7 @@
 		// ];
 
 
+
 		var pathUpdates=[
 			[{'x':1,'y':0,'number':2},{'x':2,'y':0,'number':7},{'x':2,'y': 0,'number':7}],
 			[{'x':1,'y':0,'number':3},{'x':2,'y':0,'number':5},{'x':2,'y': 0,'number':6}],
@@ -192,7 +194,6 @@
 
 
 		function updateFloorState(step){
-			//var color = ((1<<24)*Math.random()|0);
 			for(var i=0;i<floor.length; i++){
 				for(var j=0;j<floor[i].tile.length; j++){
 
@@ -213,8 +214,26 @@
 					}
 				}
 			}
-			console.log(floor);
 		}
+
+		
+		var sphereMaterial = new THREE.MeshPhongMaterial( {color:0x000000 ,emissive:0x000000 ,side:THREE.DoubleSide, shading:THREE.FlatShading} );
+		var lineMaterial = new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.5});
+		var sphere = new THREE.Object3D();
+		sphere.add(new THREE.LineSegments(new THREE.Geometry(), lineMaterial));
+		sphere.add( new THREE.Mesh( new THREE.SphereGeometry( TILE_LENGTH/8, 12, 12 ), sphereMaterial));
+		sphere.position.z = 7.5;
+		scene.add(sphere);
+
+		function updateNavigatorPosition(step,subStep,MaxStep){
+			if(step<pathUpdates.length-1){
+				for(var k=0; k<pathUpdates[step].length; k++){
+						sphere.position.x = ((pathUpdates[step+1][k].x-pathUpdates[step][k].x)*(subStep+1)/MaxStep+pathUpdates[step][k].x)*TILE_LENGTH;
+						sphere.position.y = ((pathUpdates[step+1][k].y-pathUpdates[step][k].y)*(subStep+1)/MaxStep+pathUpdates[step][k].y)*TILE_LENGTH;					
+				}
+			}
+		}
+
 
 
 
