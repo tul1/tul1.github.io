@@ -1,7 +1,7 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>Navigator</title>
+	<title>Crazy floor</title>
 	<style>
 		@font-face {
 			font-family: 'inconsolata';
@@ -49,6 +49,7 @@
 		camera.position.x = 40;
 		camera.lookAt(new THREE.Vector3(40,60,0));
 
+
 		var renderer = new THREE.WebGLRenderer( { antialias: true } );
 		renderer.setPixelRatio( window.devicePixelRatio );
 		renderer.setSize( window.innerWidth, window.innerHeight );
@@ -56,7 +57,6 @@
 		document.body.appendChild( renderer.domElement );
 
 		var controls = new THREE.OrbitControls( camera, renderer.domElement );
-
 
 		var lights = [];
 		lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
@@ -72,16 +72,8 @@
 		scene.add( lights[ 2 ] );
 
 		var TILE_LENGTH = 20;
-
 		var COLOR_OFF = 0x156289;
 		var EMISSIVE_OFF = 0x072534;
-
-		var COLOR_ON = 0x891528;
-		var EMISSIVE_ON = 0x892815;
-
-		var COLOR_PATH = 0x158928;
-		var EMISSIVE_PATH = 0x9FCFA7;
-
 
 		var triangleVectors=[
 			[new THREE.Vector3(0,-TILE_LENGTH/2,0), new THREE.Vector3(TILE_LENGTH/2,-TILE_LENGTH/2,0), new THREE.Vector3(0,0,0)],
@@ -129,114 +121,22 @@
 		}
 
 		var frame=0;
-		var step =0;
-		var subStep=0;
-		var MAX_STEP=30;
 		var render = function () {
-
 			requestAnimationFrame(render);
 			renderer.render(scene,camera);
-
-			if(step>=pathUpdates.length){
-				step=0;
-				clearFloor();
+			if(frame%5 == 0){
+				updateFloorState();
 			}
-			if(subStep>=MAX_STEP){
-				subStep=0;
-			}
-
-			if(frame%MAX_STEP == 0){
-				updateFloorState(step);
-				step++;
-				subStep=0;
-			}
-			updateNavigatorPosition(step,subStep,MAX_STEP);
-			subStep++;
 			frame++;
 		};
 
 
-		var pathUpdates=[
-			[ {'x': 2,'y': 0, 'number': 1}, {'x': 2,'y': 0, 'number': 2}, {'x': 2,'y': 0, 'number': 3} ],
-			[ {'x': 2,'y': 0, 'number': 4}, {'x': 2,'y': 0, 'number': 5}, {'x': 2,'y': 0, 'number': 6} ],
-			[ {'x': 2,'y': 1, 'number': 1}, {'x': 2,'y': 1, 'number': 2}, {'x': 2,'y': 1, 'number': 3} ],
-			[ {'x': 2,'y': 1, 'number': 4}, {'x': 2,'y': 1, 'number': 5}, {'x': 2,'y': 1, 'number': 6} ],
-			[ {'x': 2,'y': 2, 'number': 1}, {'x': 2,'y': 2, 'number': 2}, {'x': 2,'y': 2, 'number': 3} ],
-			[ {'x': 2,'y': 2, 'number': 4}, {'x': 2,'y': 2, 'number': 5}, {'x': 2,'y': 2, 'number': 6} ],
-			[ {'x': 2,'y': 3, 'number': 1}, {'x': 2,'y': 3, 'number': 2}, {'x': 2,'y': 3, 'number': 3} ],
-			[ {'x': 2,'y': 3, 'number': 4}, {'x': 2,'y': 3, 'number': 5}, {'x': 2,'y': 3, 'number': 6} ],
-			[ {'x': 2,'y': 4, 'number': 1}, {'x': 2,'y': 4, 'number': 2}, {'x': 2,'y': 4, 'number': 3} ],
-			[ {'x': 2,'y': 4, 'number': 4}, {'x': 2,'y': 4, 'number': 5}, {'x': 2,'y': 4, 'number': 6} ],
-			[ {'x': 2,'y': 5, 'number': 1}, {'x': 2,'y': 5, 'number': 2}, {'x': 2,'y': 5, 'number': 3} ],
-			[ {'x': 2,'y': 5, 'number': 4}, {'x': 2,'y': 5, 'number': 5}, {'x': 2,'y': 5, 'number': 6} ],
-			[ {'x': 2,'y': 6, 'number': 1}, {'x': 2,'y': 6, 'number': 2}, {'x': 2,'y': 6, 'number': 3} ],
-			[ {'x': 2,'y': 6, 'number': 4}, {'x': 2,'y': 6, 'number': 5}, {'x': 2,'y': 6, 'number': 6} ]
-		];
-
-		function clearFloor(){
-			pathway=[];
-			for(var i=0;i<floor.length; i++){
-				for(var j=0;j<floor[i].tile.length; j++){
-					floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
-					floor[i].tile[j].state="OFF";
-				}
-			}
-		}
-
-		var pathway=[];
 		function updateFloorState(step){
-			var auxPathway=[];
 			for(var i=0;i<floor.length; i++){
 				for(var j=0;j<floor[i].tile.length; j++){
-					floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
+					var randomColor = ((1<<24)*Math.random()|0);
+					floor[i].tile[j].triangle.children[1].material.color.set(randomColor);
 					floor[i].tile[j].state="OFF";
-					for(var k=0; k<pathUpdates[step].length; k++){
-						if(pathUpdates[step][k].x == floor[i].x &&
-							pathUpdates[step][k].y == floor[i].y && 
-							pathUpdates[step][k].number == floor[i].tile[j].number){
-							floor[i].tile[j].triangle.children[1].material.color.set(COLOR_ON);
-							floor[i].tile[j].state="ON";
-							auxPathway.push(pathUpdates[step][k]);
-						}
-					}
-				}
-			}
-
-			for(var i=0;i<floor.length;i++){
-				for(var j=0;j<floor[i].tile.length; j++){
-					for(var k=0;k<pathway.length; k++){
-						if(pathway[k].x == floor[i].x &&
-						 	pathway[k].y == floor[i].y && 
-						 	pathway[k].number == floor[i].tile[j].number){
-							floor[i].tile[j].triangle.children[1].material.color.set(COLOR_PATH);
-							floor[i].tile[j].state="PATHWAY";
-						}
-					}
-				}
-			}
-			for(var i=0; i<auxPathway.length;i++)
-				pathway.push(auxPathway[i]);
-
-		}
-		
-		var sphereMaterial = new THREE.MeshPhongMaterial( {color:0x000000 ,emissive:0x000000 ,side:THREE.DoubleSide, shading:THREE.FlatShading} );
-		var lineMaterial = new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.5});
-		var sphere = new THREE.Object3D();
-		sphere.add(new THREE.LineSegments(new THREE.Geometry(), lineMaterial));
-		sphere.add( new THREE.Mesh( new THREE.SphereGeometry( TILE_LENGTH/8, 12, 12 ), sphereMaterial));
-		sphere.position.z = 7.5;
-		scene.add(sphere);
-
-		function updateNavigatorPosition(step,subStep,MaxStep){
-			if(step<pathUpdates.length){
-				if(step){
-					for(var k=0; k<pathUpdates[step].length; k++){
-							sphere.position.x = ((pathUpdates[step][k].x-pathUpdates[step-1][0].x)*subStep/MaxStep+pathUpdates[step-1][0].x)*TILE_LENGTH;
-							sphere.position.y = ((pathUpdates[step][k].y-pathUpdates[step-1][0].y)*subStep/MaxStep+pathUpdates[step-1][0].y)*TILE_LENGTH;					
-					}					
-				}else{
-					sphere.position.x = pathUpdates[step][0].x*TILE_LENGTH;
-					sphere.position.y = pathUpdates[step][0].y*TILE_LENGTH;
 				}
 			}
 		}
