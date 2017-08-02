@@ -147,30 +147,6 @@
 		};
 
 
-		// var pathUpdates=[
-		// 	[ {'x': 2,'y': 0, 'number': 1}, {'x': 2,'y': 0, 'number': 2}, {'x': 2,'y': 0, 'number': 3} ],
-		// 	[ {'x': 2,'y': 0, 'number': 4}, {'x': 2,'y': 0, 'number': 5}, {'x': 2,'y': 0, 'number': 6} ],
-
-		// 	[ {'x': 2,'y': 1, 'number': 1}, {'x': 2,'y': 1, 'number': 2}, {'x': 2,'y': 1, 'number': 3} ],
-		// 	[ {'x': 2,'y': 1, 'number': 4}, {'x': 2,'y': 1, 'number': 5}, {'x': 2,'y': 1, 'number': 6} ],
-
-		// 	[ {'x': 2,'y': 2, 'number': 1}, {'x': 2,'y': 2, 'number': 2}, {'x': 2,'y': 2, 'number': 3} ],
-		// 	[ {'x': 2,'y': 2, 'number': 4}, {'x': 2,'y': 2, 'number': 5}, {'x': 2,'y': 2, 'number': 6} ],
-
-		// 	[ {'x': 2,'y': 3, 'number': 1}, {'x': 2,'y': 3, 'number': 2}, {'x': 2,'y': 3, 'number': 3} ],
-		// 	[ {'x': 2,'y': 3, 'number': 4}, {'x': 2,'y': 3, 'number': 5}, {'x': 2,'y': 3, 'number': 6} ],
-
-		// 	[ {'x': 2,'y': 4, 'number': 1}, {'x': 2,'y': 4, 'number': 2}, {'x': 2,'y': 4, 'number': 3} ],
-		// 	[ {'x': 2,'y': 4, 'number': 4}, {'x': 2,'y': 4, 'number': 5}, {'x': 2,'y': 4, 'number': 6} ],
-
-		// 	[ {'x': 2,'y': 5, 'number': 1}, {'x': 2,'y': 5, 'number': 2}, {'x': 2,'y': 5, 'number': 3} ],
-		// 	[ {'x': 2,'y': 5, 'number': 4}, {'x': 2,'y': 5, 'number': 5}, {'x': 2,'y': 5, 'number': 6} ],
-
-		// 	[ {'x': 2,'y': 6, 'number': 1}, {'x': 2,'y': 6, 'number': 2}, {'x': 2,'y': 6, 'number': 3} ],
-		// 	[ {'x': 2,'y': 6, 'number': 4}, {'x': 2,'y': 6, 'number': 5}, {'x': 2,'y': 6, 'number': 6} ]
-		// ];
-
-
 		var pathUpdates=[
 			[{'x':1,'y':0,'number':2},{'x':2,'y':0,'number':7},{'x':2,'y': 0,'number':7}],
 			[{'x':1,'y':0,'number':3},{'x':2,'y':0,'number':5},{'x':2,'y': 0,'number':6}],
@@ -186,37 +162,25 @@
 			[{'x':1,'y':5,'number':5},{'x':1,'y':6,'number':1},{'x':1,'y':6,'number':7},{'x':1,'y':6,'number':8}],
 			[{'x':1,'y':6,'number':2},{'x':1,'y':6,'number':3},{'x':1,'y':6,'number':4},{'x':1,'y':6,'number':5},{'x':1,'y':6,'number':6}],
 			[{'x':2,'y':6,'number':4},{'x':2,'y':6,'number':5},{'x':2,'y':6,'number':6},{'x':2,'y':6,'number':7}]
-
 		];
-
-
+		
 
 		function updateFloorState(step){
-			//var color = ((1<<24)*Math.random()|0);
 			for(var i=0;i<floor.length; i++){
 				for(var j=0;j<floor[i].tile.length; j++){
-
-					floor[i].tile[j].triangle.children[0].material.color.set(COLOR_OFF);
 					floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
 					floor[i].tile[j].state="OFF";
-					//floor[i].tile[j].triangle.children[0].material.emissive.set(EMISSIVE_OFF);
-					//floor[i].tile[j].triangle.children[1].material.emissive.set(EMISSIVE_OFF);						
-
 					for(var k=0; k<pathUpdates[step].length; k++){
 						if(pathUpdates[step][k].x == floor[i].x &&
 							pathUpdates[step][k].y == floor[i].y && 
 							pathUpdates[step][k].number == floor[i].tile[j].number){
-							floor[i].tile[j].triangle.children[0].material.color.set(COLOR_ON);
 							floor[i].tile[j].triangle.children[1].material.color.set(COLOR_ON);
 							floor[i].tile[j].state="ON";
 						}
 					}
 				}
 			}
-			console.log(floor);
 		}
-
-
 
 		window.addEventListener( 'resize', function () {
 			camera.aspect = window.innerWidth / window.innerHeight;
