@@ -76,12 +76,15 @@
 		scene.add( lights[ 2 ] );
 
 		var TILE_LENGTH = 20;
-
 		var COLOR_OFF = 0x156289;
 		var EMISSIVE_OFF = 0x072534;
-
 		var COLOR_ON = 0x891528;
 		var EMISSIVE_ON = 0x892815;
+
+		var COLOR_PATH = 0x158928;
+		var EMISSIVE_PATH = 0x9FCFA7;
+
+
 
 		var triangleVectors=[
 			[new THREE.Vector3(0,-TILE_LENGTH/2,0), new THREE.Vector3(TILE_LENGTH/2,-TILE_LENGTH/2,0), new THREE.Vector3(0,0,0)],
@@ -138,14 +141,13 @@
 			if(step>pathUpdates.length-1)
 				step=0;
 
-			if(frame%20 == 0){
+			if(frame%30 == 0){
 				updateFloorState(step);
 				step++;
 			}
 
 			frame++;
 		};
-
 
 		var pathUpdates=[
 			[{'x':1,'y':0,'number':2},{'x':2,'y':0,'number':7},{'x':2,'y': 0,'number':7}],
@@ -163,9 +165,11 @@
 			[{'x':1,'y':6,'number':2},{'x':1,'y':6,'number':3},{'x':1,'y':6,'number':4},{'x':1,'y':6,'number':5},{'x':1,'y':6,'number':6}],
 			[{'x':2,'y':6,'number':4},{'x':2,'y':6,'number':5},{'x':2,'y':6,'number':6},{'x':2,'y':6,'number':7}]
 		];
-		
 
+
+		var pathway=[];
 		function updateFloorState(step){
+			var auxPathway=[];
 			for(var i=0;i<floor.length; i++){
 				for(var j=0;j<floor[i].tile.length; j++){
 					floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
@@ -176,10 +180,26 @@
 							pathUpdates[step][k].number == floor[i].tile[j].number){
 							floor[i].tile[j].triangle.children[1].material.color.set(COLOR_ON);
 							floor[i].tile[j].state="ON";
+							auxPathway.push(pathUpdates[step][k]);
 						}
 					}
 				}
 			}
+
+			for(var i=0;i<floor.length;i++){
+				for(var j=0;j<floor[i].tile.length; j++){
+					for(var k=0;k<pathway.length; k++){
+						if(pathway[k].x == floor[i].x &&
+						 	pathway[k].y == floor[i].y && 
+						 	pathway[k].number == floor[i].tile[j].number){
+							floor[i].tile[j].triangle.children[1].material.color.set(COLOR_PATH);
+						}
+					}
+				}
+			}
+			for(var i=0; i<auxPathway.length;i++)
+				pathway.push(auxPathway[i]);
+
 		}
 
 		window.addEventListener( 'resize', function () {
