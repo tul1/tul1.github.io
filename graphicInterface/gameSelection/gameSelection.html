@@ -143,25 +143,26 @@
 
 	function onClickNewGame(){
         console.log("newGame");
-        location.href="/gameGenerator/";
+        // location.href="/gameExecution.html";
 	}
 	
 	function onClickPlayGame(id){
         console.log("playGame");
-		location.href="/gameExecution/"+id;
+		// location.href="/gameExecution/"+id;
+        location.href="/gameExecution.html";
 	}
 	
 	function onClickDeleteGame(id,nombre){
         console.log("playGame");
 		if(confirm("You are going to delete the game '"+nombre+"' (id:"+id+"). Are you sure you mean this?")){
-			location.href="/cables/eliminar/"+id;	
+			// location.href="/cables/eliminar/"+id;	
 		};
 	}
 	
 	function onClickEditGame(id){
         console.log("editGame");
 		var url="/cables/modificar/"+id+"/";
-		window.location.href = url;
+		// window.location.href = url;
 	}
 
     $('#gameListTable').removeClass('display').addClass('table table-striped table-bordered');
