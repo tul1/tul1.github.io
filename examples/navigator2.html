@@ -1,0 +1,210 @@
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Navigator</title>
+	<style>
+		@font-face {
+			font-family: 'inconsolata';
+			src: url('files/inconsolata.woff') format('woff');
+			font-weight: normal;
+			font-style: normal;
+		}
+
+		body {
+			margin:0;
+			font-family: 'inconsolata';
+			font-size: 15px;
+			line-height: 18px;
+			overflow: hidden;
+		}
+
+		canvas { width: 100%; height: 100% }
+
+		#newWindow {
+			display: block;
+			position: absolute;
+			bottom: 0.3em;
+			left: 0.5em;
+			color: #fff;
+		}
+	</style>
+</head>
+
+<body>
+
+	<a id="newWindow" href="https://threejs.org/docs/scenes/geometry-browser.html#PlaneGeometry" target="_blank">Open in New Window</a>
+	<script src="../build/three.js"></script>
+
+
+    <script src="http://10.77.3.118:8000:8000/socket.io/socket.io.js"></script>
+
+
+	<script src="js/libs/dat.gui.min.js"></script>
+	<script src="js/controls/OrbitControls.js"></script>
+	<script src="js/ParametricGeometries.js"></script>
+	<script src="js2/3Dfloor.js"></script>
+
+	<script>
+		document.getElementById( 'newWindow' ).href += window.location.hash;
+
+		var scene = new THREE.Scene();
+		var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+		camera.position.z = 100;
+		camera.position.y = 60;
+		camera.position.x = 40;
+		camera.lookAt(new THREE.Vector3(40,60,0));
+
+		var renderer = new THREE.WebGLRenderer( { antialias: true } );
+		renderer.setPixelRatio( window.devicePixelRatio );
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		renderer.setClearColor( 0xFFFFFF, 1 );
+		document.body.appendChild( renderer.domElement );
+
+		var controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+		var lights = [];
+		lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+		lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+
+		lights[ 0 ].position.set( 100, 200, 100 );
+		lights[ 1 ].position.set( - 100, - 200, - 100 );
+
+		scene.add( lights[ 0 ] );
+		scene.add( lights[ 1 ] );
+	
+
+		var sphereMaterial = new THREE.MeshPhongMaterial( {
+			color:0x000000,
+			emissive:0x000000,
+			side:THREE.DoubleSide, 
+			shading:THREE.FlatShading
+		});
+
+		var lineMaterial = new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.5});
+		var sphere = new THREE.Object3D();
+		sphere.add(new THREE.LineSegments(new THREE.Geometry(), lineMaterial));
+		sphere.add( new THREE.Mesh( new THREE.SphereGeometry( TILE_LENGTH/8, 12, 12 ), sphereMaterial));
+		sphere.position.z = 0;
+		sphere.position.x = 0;
+		sphere.position.y = 10;
+
+
+
+		scene.add(sphere);
+
+
+		var nX=2;
+		var nZ=12;
+		createFloor(nX,nZ);
+
+		var frame=0;
+		var step =0;
+		var subStep=0;
+		var MAX_STEP=7;
+
+
+		var activeTilePatern=[
+			[{'x':1,'z':0,'number':5,'intensity':20},{'x':1,'z':0,'number':6,'intensity':120}],
+			[{'x':0,'z':0,'number':1,'intensity':20},{'x':0,'z':1,'number':3,'intensity':80},{'x':0,'z':1,'number':4,'intensity':120}],
+			[{'x':1,'z':1,'number':8,'intensity':20},{'x':1,'z':1,'number':7,'intensity':120},{'x':1,'z':1,'number':6,'intensity':100},{'x':1,'z':1,'number':5,'intensity':10}],
+			[{'x':0,'z':2,'number':2,'intensity':110},{'x':0,'z':2,'number':3,'intensity':120},{'x':0,'z':2,'number':4,'intensity':60}],
+			[{'x':1,'z':2,'number':7,'intensity':127},{'x':1,'z':2,'number':8,'intensity':120}],
+			[{'x':0,'z':3,'number':2,'intensity':70},{'x':0,'z':3,'number':3,'intensity':110},{'x':0,'z':3,'number':4,'intensity':90}],
+			[{'x':1,'z':3,'number':7,'intensity':80},{'x':1,'z':3,'number':8,'intensity':110},{'x':1,'z':4,'number':5,'intensity':20}],
+			[{'x':0,'z':4,'number':1,'intensity':10},{'x':0,'z':4,'number':2,'intensity':80},{'x':0,'z':4,'number':3,'intensity':90},{'x':0,'z':4,'number':4,'intensity':20}],
+			[{'x':1,'z':4,'number':8,'intensity':10},{'x':1,'z':5,'number':5,'intensity':40},{'x':1,'z':5,'number':6,'intensity':120}],
+			[{'x':0,'z':5,'number':1,'intensity':10},{'x':0,'z':6,'number':4,'intensity':100},{'x':0,'z':6,'number':3,'intensity':120}],
+			[{'x':1,'z':6,'number':7,'intensity':50},{'x':1,'z':6,'number':8,'intensity':120},{'x':1,'z':7,'number':5,'intensity':70}],
+			[{'x':0,'z':7,'number':4,'intensity':80},{'x':0,'z':7,'number':3,'intensity':100},{'x':0,'z':7,'number':2,'intensity':100}],
+			[{'x':1,'z':7,'number':7,'intensity':20},{'x':1,'z':7,'number':8,'intensity':70},{'x':1,'z':8,'number':5,'intensity':80},{'x':1,'z':8,'number':6,'intensity':70}],
+			[{'x':0 ,'z':8,'number':1,'intensity':50},{'x':0,'z':8,'number':2,'intensity':70},{'x':0,'z':8,'number':3,'intensity':70},{'x':0,'z':8,'number':4,'intensity':50},{'x':0,'z':8,'number':5,'intensity':50},{'x':0,'z':8,'number':6,'intensity':70},{'x':0,'z':8,'number':7,'intensity':70}, {'x':0,'z':8,'number':8,'intensity':50}],
+			[{'x':0,'z':8,'number':1,'intensity':40},{'x':0,'z':8,'number':2,'intensity':80},{'x':0,'z':9,'number':3,'intensity':90},{'x':0,'z':9,'number':4,'intensity':10},{'x':1,'z':8,'number':7,'intensity':80},{'x':1,'z':8,'number':8,'intensity':40},{'x':1,'z':9,'number':5,'intensity':30}, {'x':1,'z':9,'number':6,'intensity':80}],
+			[{'x':1,'z':9,'number':8,'intensity':100},{'x':1,'z':10,'number':5,'intensity':120}],
+			[{'x':0,'z':10,'number':1,'intensity':90},{'x':0,'z':10,'number':2,'intensity':120},{'x':0,'z':10,'number':3,'intensity':70}],
+			[{'x':1,'z':11,'number':5,'intensity':40},{'x':1,'z':11,'number':6,'intensity':80},{'x':1,'z':11,'number':7,'intensity':90},{'x':1,'z':11,'number':8,'intensity':60}]
+		];
+
+
+		var activeTiles=[]
+		for(var i=0; i<activeTilePatern.length;i++){
+			for(var j=0; j<10; j++)
+				activeTiles.push(activeTilePatern[i]);
+		}
+
+
+		var newGravityCenter={};
+		var gravityCenters=[];
+		var trajectory=[];
+
+
+		var sensFloorPosition={'posX':0,'posZ':0};
+
+		var oldGravityCenter={'posX':0,'posZ':0};
+		var render = function () {
+			requestAnimationFrame(render);
+			renderer.render(scene,camera);
+			
+
+			if(step>=activeTiles.length){
+				step=0;
+				frame=0;
+				clearFloor();
+				console.log(JSON.stringify(trajectory));
+			}
+			
+			//MAX_STEP es constante porque es la velocidad de transmision de la Raspi
+			if(frame==MAX_STEP){
+				//newGravityCenter = updateFloor(activeTiles[step]);
+				//gravityCenters.push(newGravityCenter);
+				//showPathway();
+				frame=0;
+				step++;
+			}
+		
+			var posX = 0;
+			var posZ = 0;
+			if(gravityCenters.length>1){
+				posX = (gravityCenters[gravityCenters.length-1].posX - gravityCenters[gravityCenters.length-2].posX)*(frame+1)/MAX_STEP+gravityCenters[gravityCenters.length-2].posX;
+				posZ = (gravityCenters[gravityCenters.length-1].posZ - gravityCenters[gravityCenters.length-2].posZ)*(frame+1)/MAX_STEP+gravityCenters[gravityCenters.length-2].posZ;				
+			}
+			//var position = {'posX':posX,'posZ':posZ};
+			trajectory.push(sensFloorPosition);
+			
+			updateNavigatorPosition(sensFloorPosition);
+			
+			frame++;
+		};
+
+        // var client = io.connect('http://192.168.5.5:8000');
+        var client = io.connect('http://10.77.3.118:8000');
+
+
+        client.on('objects-update', function(objects){
+            //console.log('objects-update');
+            for (var i = 0; i < objects.length; i++) {
+            	sensFloorPosition = {'posX':(objects[i].y*80),'posZ':-(objects[i].x*80)};
+                console.log(objects[i].x + ' ' + objects[i].y);
+            }
+        });
+
+
+		function updateNavigatorPosition(pos){
+			sphere.position.x = pos.posX;
+			sphere.position.z = pos.posZ;
+		}
+
+		window.addEventListener( 'resize', function () {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+		}, false );
+
+		render();
+
+	</script>
+
+
+	<canvas width="1920" height="502" style="width: 1536px; height: 402px;"></canvas>	
+
+</body>
+</html>
