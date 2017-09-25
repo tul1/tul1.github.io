@@ -62,6 +62,7 @@ var DEMOAUTO =  DEMOAUTO || {};
 			this._container.add(this.cam);			
 			
 			this.cam2=new THREE.PerspectiveCamera(65,aspect, 0.1, 3000); 
+			this.cam2.rotation.y=Math.PI;
 			this.cam2.position.set(0,10,-10.0);
 			this.cam2.lookAt(new THREE.Vector3(0.15,1,5));			
 			this._container.add(this.cam2);			
