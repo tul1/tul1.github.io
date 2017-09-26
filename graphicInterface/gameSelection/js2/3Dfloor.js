@@ -107,7 +107,7 @@ function hexToHSL(hexColor){
 
 function composeActivityColor(intensity){//intensity goes from 0 to 127
 	var MIN_ACTIVITY_HUE_COLOR = 45;
-	var MAX_ACTIVITY_VALUE = 255;
+	var MAX_ACTIVITY_VALUE = 128;
 	var hue = -MIN_ACTIVITY_HUE_COLOR*intensity/MAX_ACTIVITY_VALUE+MIN_ACTIVITY_HUE_COLOR;
 	return "hsl("+hue+",90%,55%)";
 }
