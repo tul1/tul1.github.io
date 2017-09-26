@@ -112,43 +112,87 @@ function composeActivityColor(intensity){//intensity goes from 0 to 127
 	return "hsl("+hue+",90%,55%)";
 }
 
-function updateFloor(activeTiles){//TODO change tile for active pad
-	for(var i=0;i<floor.length; i++){
-		for(var j=0;j<floor[i].tile.length; j++){
-			
-			floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
-			floor[i].tile[j].state="OFF";
 
-			for(var k=0; k<activeTiles.length; k++){
-				if(activeTiles[k].x == floor[i].x &&
-					activeTiles[k].z == floor[i].z && 
-					activeTiles[k].number == floor[i].tile[j].number){					
+
+// function updateFloor(activeTiles){//TODO change tile for active pad
+// 	for(var i=0;i<floor.length; i++){
+// 		for(var j=0;j<floor[i].tile.length; j++){
+			
+// 			floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
+// 			floor[i].tile[j].state="OFF";
+
+// 			for(var k=0; k<activeTiles.length; k++){
+// 				if(activeTiles[k].x == floor[i].x &&
+// 					activeTiles[k].z == floor[i].z && 
+// 					activeTiles[k].number == floor[i].tile[j].number){					
 					
-					var trianglePadColor = composeActivityColor(activeTiles[k].intensity);
-					floor[i].tile[j].triangle.children[1].material.color.set(trianglePadColor);	
-					floor[i].tile[j].state="ON";
+// 					var trianglePadColor = composeActivityColor(activeTiles[k].intensity);
+// 					floor[i].tile[j].triangle.children[1].material.color.set(trianglePadColor);	
+// 					floor[i].tile[j].state="ON";
 					
-					activeTiles[k].padBarycenter = floor[i].tile[j].padBarycenter;
+// 					activeTiles[k].padBarycenter = floor[i].tile[j].padBarycenter;
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	var intensitySum = 0;
+// 	for(var i=0; i<activeTiles.length; i++)
+// 		intensitySum += activeTiles[i].intensity;
+
+// 	var posX=0;
+// 	var posZ=0;
+// 	for(var i=0; i<activeTiles.length; i++) {
+// 		posX += activeTiles[i].intensity*activeTiles[i].padBarycenter.x;
+// 		posZ += activeTiles[i].intensity*activeTiles[i].padBarycenter.z;
+// 	}
+// 	var actualPosition = {'posX': posX/intensitySum,'posZ': posZ/intensitySum};
+	
+// 	pathway.push(activeTiles);
+
+// 	return actualPosition;
+// }
+
+function updateFloor(activeTiles){//TODO change tile for active pad
+	if(activeTiles.length>0){
+		for(var i=0;i<floor.length; i++){
+			for(var j=0;j<floor[i].tile.length; j++){
+				
+				floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
+				floor[i].tile[j].state="OFF";
+
+				for(var k=0; k<activeTiles.length; k++){
+					if(activeTiles[k].x == floor[i].x &&
+						activeTiles[k].z == floor[i].z && 
+						activeTiles[k].number == floor[i].tile[j].number){					
+						
+						var trianglePadColor = composeActivityColor(activeTiles[k].intensity);
+						floor[i].tile[j].triangle.children[1].material.color.set(trianglePadColor);	
+						floor[i].tile[j].state="ON";
+						
+						activeTiles[k].padBarycenter = floor[i].tile[j].padBarycenter;
+					}
 				}
 			}
 		}
+
+		// var intensitySum = 0;
+		// for(var i=0; i<activeTiles.length; i++)
+		// 	intensitySum += activeTiles[i].intensity;
+
+		// var posX=0;
+		// var posZ=0;
+		// for(var i=0; i<activeTiles.length; i++) {
+		// 	posX += activeTiles[i].intensity*activeTiles[i].padBarycenter.x;
+		// 	posZ += activeTiles[i].intensity*activeTiles[i].padBarycenter.z;
+		// }
+		// var actualPosition = {'posX': posX/intensitySum,'posZ': posZ/intensitySum};
+		
+		// pathway.push(activeTiles);
+
+		// return actualPosition;		
 	}
 
-	var intensitySum = 0;
-	for(var i=0; i<activeTiles.length; i++)
-		intensitySum += activeTiles[i].intensity;
-
-	var posX=0;
-	var posZ=0;
-	for(var i=0; i<activeTiles.length; i++) {
-		posX += activeTiles[i].intensity*activeTiles[i].padBarycenter.x;
-		posZ += activeTiles[i].intensity*activeTiles[i].padBarycenter.z;
-	}
-	var actualPosition = {'posX': posX/intensitySum,'posZ': posZ/intensitySum};
-	
-	pathway.push(activeTiles);
-
-	return actualPosition;
 }
 
 
