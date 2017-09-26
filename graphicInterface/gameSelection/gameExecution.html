@@ -145,7 +145,7 @@ client.on('connect', function() {
 
 
 
-socket.on('new-activity-on-fields', function(diffBuffer) {
+client.on('new-activity-on-fields', function(diffBuffer) {
     var activeTiles=[];
     for (var i = 0; i < diffBuffer.length; i++) {
       //  console.log(diffBuffer[i]);
