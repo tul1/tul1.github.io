@@ -159,23 +159,19 @@ function updateFloor(activeTiles){//TODO change tile for active pad
 		for(var i=0;i<floor.length; i++){
 			for(var j=0;j<floor[i].tile.length; j++){
 				
-				// floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
-				// floor[i].tile[j].state="OFF";
+				floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
+				floor[i].tile[j].state="OFF";
 
+				for(var k=0; k<activeTiles.length; k++){
+					if(activeTiles[k].x == floor[i].x &&
+						activeTiles[k].z == floor[i].z && 
+						activeTiles[k].number == floor[i].tile[j].number){					
 						var trianglePadColor = composeActivityColor(activeTiles[k].intensity);
 						floor[i].tile[j].triangle.children[1].material.color.set(trianglePadColor);	
 						floor[i].tile[j].state="ON";
-
-				// for(var k=0; k<activeTiles.length; k++){
-				// 	if(activeTiles[k].x == floor[i].x &&
-				// 		activeTiles[k].z == floor[i].z && 
-				// 		activeTiles[k].number == floor[i].tile[j].number){					
-				// 		var trianglePadColor = composeActivityColor(activeTiles[k].intensity);
-				// 		floor[i].tile[j].triangle.children[1].material.color.set(trianglePadColor);	
-				// 		floor[i].tile[j].state="ON";
 						
 						//activeTiles[k].padBarycenter = floor[i].tile[j].padBarycenter;
-				//	}
+					}
 				}
 			}
 		}
