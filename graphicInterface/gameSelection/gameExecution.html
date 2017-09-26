@@ -152,8 +152,11 @@ $("#mesurements #actualPosition span").text("(0 m, 0 m)");
 
 var instantSpeed=0;
 var actualPosition={'x':0,'y':0};
+var instantSpeedCum=0;
+var samples=0;
 
 client.on('objects-update', function(objects){
+
     if(objects.length>0)
         sensFloorPosition = {'posX':(objects[0].y*80),'posZ':-(objects[0].x*80)};//TODO desharcodear esto
     if(cronoState=="COUNTING"){
@@ -166,6 +169,9 @@ client.on('objects-update', function(objects){
             actualPosition.x = 0;
             actualPosition.y = 0;
         }
+        samples++;
+        instantSpeedCum += instantSpeed;
+        $("#mesurements #instantSpeed span").text(instantSpeedCum/samples + " m/s");
         $("#mesurements #instantSpeed span").text(instantSpeed + " m/s");
         $("#mesurements #actualPosition span").text("("+actualPosition.x+" m,"+actualPosition.y+" m)");
     }
@@ -250,6 +256,7 @@ $("#exerciceView #resetButton").click(function(e){
     $("#mesurements #time span").text( "00:00.000" );
     outputData=[];
     cronoState="RESETED";
+    samples=0;
 });
 
 
