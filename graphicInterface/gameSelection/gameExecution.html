@@ -152,8 +152,8 @@ client.on('new-activity-on-fields', function(diffBuffer) {
       //  console.log(diffBuffer[i]);
       //  sensorField.updateActivity(diffBuffer[i][2] - 1, diffBuffer[i][3] - 1, diffBuffer[i][4] - 1, diffBuffer[i][5]);
         var aux={
-            'x': (diffBuffer[i][2]-1),
-            'z': (diffBuffer[i][3]-1),
+            'x': (diffBuffer[i][3]-1),
+            'z': (diffBuffer[i][2]-1),
             'number': diffBuffer[i][4],
             'intensity': diffBuffer[i][5]
         }
