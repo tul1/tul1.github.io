@@ -154,6 +154,7 @@ function composeActivityColor(intensity){//intensity goes from 0 to 127
 // }
 
 function updateFloor(activeTiles){//TODO change tile for active pad
+	console.log(activeTiles);
 	if(activeTiles.length>0){
 		for(var i=0;i<floor.length; i++){
 			for(var j=0;j<floor[i].tile.length; j++){
@@ -165,7 +166,6 @@ function updateFloor(activeTiles){//TODO change tile for active pad
 					if(activeTiles[k].x == floor[i].x &&
 						activeTiles[k].z == floor[i].z && 
 						activeTiles[k].number == floor[i].tile[j].number){					
-						
 						var trianglePadColor = composeActivityColor(activeTiles[k].intensity);
 						floor[i].tile[j].triangle.children[1].material.color.set(trianglePadColor);	
 						floor[i].tile[j].state="ON";
