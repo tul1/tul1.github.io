@@ -146,8 +146,8 @@ client.on('connect', function() {
 
 var outputData=[];
 
-$("#mesurements #averageSpeed span").text("0.00");
-$("#mesurements #instantSpeed span").text("0.00");
+$("#mesurements #averageSpeed span").text("0.00 m/s");
+$("#mesurements #instantSpeed span").text("0.00 m/s");
 $("#mesurements #actualPosition span").text("(0 m, 0 m)");        
 
 var instantSpeed=0;
@@ -158,7 +158,7 @@ var samples=0;
 client.on('objects-update', function(objects){
 
     if(objects.length>0)
-        sensFloorPosition = {'posX':(objects[0].y*80),'posZ':-(objects[0].x*80)};//TODO desharcodear esto
+        sensFloorPosition = {'posX':(objects[0].y*80),'posZ':-(objects[0].x*80),'posY':(objects[0].mV*2)};//TODO desharcodear esto
     if(cronoState=="COUNTING"){
         if(objects.length>0){
             instantSpeed = Math.floor(objects[0].mV*100)/100;
@@ -171,7 +171,7 @@ client.on('objects-update', function(objects){
         }
         samples++;
         instantSpeedCum += instantSpeed;
-        $("#mesurements #averageSpeed span").text(instantSpeedCum/samples + " m/s");
+        $("#mesurements #averageSpeed span").text(Math.floor(100*instantSpeedCum/samples)/100 + " m/s");
         $("#mesurements #instantSpeed span").text(instantSpeed + " m/s");
         $("#mesurements #actualPosition span").text("("+actualPosition.x+" m,"+actualPosition.y+" m)");
     }
@@ -353,6 +353,8 @@ var render = function () {
 function updateNavigatorPosition(pos){
     sphere.position.x = pos.posX;
     sphere.position.z = pos.posZ;
+    sphere.position.y = pos.posY;
+
 }
 
 
