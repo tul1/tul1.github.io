@@ -144,9 +144,10 @@ client.on('connect', function() {
 });
 
 
+var activeTiles=[];
 
 client.on('new-activity-on-fields', function(diffBuffer) {
-    var activeTiles=[];
+    activeTiles=[];
     for (var i = 0; i < diffBuffer.length; i++) {
       //  console.log(diffBuffer[i]);
       //  sensorField.updateActivity(diffBuffer[i][2] - 1, diffBuffer[i][3] - 1, diffBuffer[i][4] - 1, diffBuffer[i][5]);
@@ -158,7 +159,6 @@ client.on('new-activity-on-fields', function(diffBuffer) {
         }
         activeTiles.push(aux);
     }
-    updateFloor(activeTiles);
 });
 
 
@@ -367,7 +367,8 @@ var render = function () {
     trajectory.push(sensFloorPosition);
     
     updateNavigatorPosition(sensFloorPosition);
-    
+    updateFloor(activeTiles);
+
 };
 
 
