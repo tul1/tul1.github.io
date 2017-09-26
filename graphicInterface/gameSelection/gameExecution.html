@@ -171,7 +171,7 @@ client.on('objects-update', function(objects){
         }
         samples++;
         instantSpeedCum += instantSpeed;
-        $("#mesurements #instantSpeed span").text(instantSpeedCum/samples + " m/s");
+        $("#mesurements #averageSpeed span").text(instantSpeedCum/samples + " m/s");
         $("#mesurements #instantSpeed span").text(instantSpeed + " m/s");
         $("#mesurements #actualPosition span").text("("+actualPosition.x+" m,"+actualPosition.y+" m)");
     }
