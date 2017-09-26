@@ -107,7 +107,7 @@ function hexToHSL(hexColor){
 
 function composeActivityColor(intensity){//intensity goes from 0 to 127
 	var MIN_ACTIVITY_HUE_COLOR = 45;
-	var MAX_ACTIVITY_VALUE = 128;
+	var MAX_ACTIVITY_VALUE = 256;
 	var hue = -MIN_ACTIVITY_HUE_COLOR*intensity/MAX_ACTIVITY_VALUE+MIN_ACTIVITY_HUE_COLOR;
 	return "hsl("+hue+",90%,55%)";
 }
@@ -160,8 +160,8 @@ function updateFloor(activeTiles){//TODO change tile for active pad
 		for(var i=0;i<floor.length; i++){
 			for(var j=0;j<floor[i].tile.length; j++){
 				
-				floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
-				floor[i].tile[j].state="OFF";
+				// floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
+				// floor[i].tile[j].state="OFF";
 
 				for(var k=0; k<activeTiles.length; k++){
 					if(activeTiles[k].x == floor[i].x &&
