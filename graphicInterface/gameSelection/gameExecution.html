@@ -144,6 +144,27 @@ client.on('connect', function() {
 });
 
 
+
+socket.on('new-activity-on-fields', function(diffBuffer) {
+    var activeTiles=[];
+    for (var i = 0; i < diffBuffer.length; i++) {
+      //  console.log(diffBuffer[i]);
+      //  sensorField.updateActivity(diffBuffer[i][2] - 1, diffBuffer[i][3] - 1, diffBuffer[i][4] - 1, diffBuffer[i][5]);
+        var aux={
+            'x': diffBuffer[i][2],
+            'z': diffBuffer[i][3],
+            'number': diffBuffer[i][4],
+            'intensity': diffBuffer[i][5]
+        }
+        activeTiles.push(aux);
+    }
+    updateFloor(activeTiles);
+});
+
+
+
+
+
 var outputData=[];
 
 $("#mesurements #averageSpeed span").text("0.00 m/s");
