@@ -170,7 +170,7 @@ function updateFloor(activeTiles){//TODO change tile for active pad
 						floor[i].tile[j].triangle.children[1].material.color.set(trianglePadColor);	
 						floor[i].tile[j].state="ON";
 						
-						activeTiles[k].padBarycenter = floor[i].tile[j].padBarycenter;
+						//activeTiles[k].padBarycenter = floor[i].tile[j].padBarycenter;
 					}
 				}
 			}
