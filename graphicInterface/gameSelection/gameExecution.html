@@ -158,7 +158,7 @@ var samples=0;
 client.on('objects-update', function(objects){
 
     if(objects.length>0)
-        sensFloorPosition = {'posX':(objects[0].y*80),'posZ':-(objects[0].x*80),'posY':(objects[0].mV*2)};//TODO desharcodear esto
+        sensFloorPosition = {'posX':(objects[0].y*80),'posZ':-(objects[0].x*80),'posY':(Math.floor(objects[0].mV*100)/100)};//TODO desharcodear esto
     if(cronoState=="COUNTING"){
         if(objects.length>0){
             instantSpeed = Math.floor(objects[0].mV*100)/100;
@@ -310,7 +310,7 @@ var sphereMaterial = new THREE.MeshPhongMaterial( {
 var lineMaterial = new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0.5});
 var sphere = new THREE.Object3D();
 sphere.add(new THREE.LineSegments(new THREE.Geometry(), lineMaterial));
-sphere.add( new THREE.Mesh( new THREE.SphereGeometry( TILE_LENGTH/8, 12, 12 ), sphereMaterial));
+sphere.add( new THREE.Mesh( new THREE.SphereGeometry( TILE_LENGTH/8, 12, 12), sphereMaterial));
 sphere.position.z = 0;
 sphere.position.x = 0;
 sphere.position.y = 10;
@@ -353,7 +353,7 @@ var render = function () {
 function updateNavigatorPosition(pos){
     sphere.position.x = pos.posX;
     sphere.position.z = pos.posZ;
-    sphere.position.y = pos.posY;
+    sphere.position.y = pos.posY + 2;
 
 }
 
