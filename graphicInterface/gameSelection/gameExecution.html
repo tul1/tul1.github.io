@@ -147,10 +147,8 @@ client.on('connect', function() {
 var activeTiles=[];
 
 client.on('new-activity-on-fields', function(diffBuffer) {
-    activeTiles=[];
+    activeTiles=[];//TODO integrar este codigo a la funcion updateTile
     for (var i = 0; i < diffBuffer.length; i++) {
-      //  console.log(diffBuffer[i]);
-      //  sensorField.updateActivity(diffBuffer[i][2] - 1, diffBuffer[i][3] - 1, diffBuffer[i][4] - 1, diffBuffer[i][5]);
         var aux={
             'x': (diffBuffer[i][3]-1),
             'z': (diffBuffer[i][2]-1),
@@ -160,8 +158,6 @@ client.on('new-activity-on-fields', function(diffBuffer) {
         activeTiles.push(aux);
     }
 });
-
-
 
 
 
@@ -247,7 +243,7 @@ $("#exerciceView #playButton").click(function(e){
 
         outputData.push({
             'instantSpeed':instantSpeed,
-            'averageSpeed':averageSpeed,
+            'averageSpeed':Math.floor(100*instantSpeedCum/samples)/100,
             'position':{
                 'x':actualPosition.x,
                 'y':actualPosition.y
