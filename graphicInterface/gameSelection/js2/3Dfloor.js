@@ -156,12 +156,12 @@ function composeActivityColor(intensity){//intensity goes from 0 to 127
 function updateFloor(activeTiles){//TODO change tile for active pad
 	console.log(activeTiles);
 
-	if(activeTiles.length>0){
-		for(var i=0;i<floor.length; i++){
-			for(var j=0;j<floor[i].tile.length; j++){
-				
-				floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
-				floor[i].tile[j].state="OFF";
+	for(var i=0;i<floor.length; i++){
+		for(var j=0;j<floor[i].tile.length; j++){
+			
+			floor[i].tile[j].triangle.children[1].material.color.set(COLOR_OFF);
+			floor[i].tile[j].state="OFF";
+			if(activeTiles.length>0){
 
 				for(var k=0; k<activeTiles.length; k++){
 					if(activeTiles[k].x == floor[i].x &&
