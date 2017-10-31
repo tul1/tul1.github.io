@@ -89,7 +89,7 @@
                                 <br>
                                 <div id="webGLViewPort" style="position: relative; left: 10px;"></div>
                                 <br>
-                                <div class="toolbar" style="position: relative; top: -10px;left: 530px;">
+                                <div class="toolbar" style="position: relative; top: -10px;left: 350px;">
                                     View: 
                                     <button class="diagonalView">45 degrees</button>
                                     <button class="2dView">2D</button>
@@ -302,7 +302,7 @@ camera.position.x = 40;
 camera.lookAt(new THREE.Vector3(40,60,0));
 
 var renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(680,460);
+renderer.setSize(500,340)
 renderer.setClearColor( 0xFFFFFF, 1 );
 
 $("#gameViewer #webGLViewPort").append(renderer.domElement);
