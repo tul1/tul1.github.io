@@ -175,7 +175,7 @@ var samples=0;
 client.on('objects-update', function(objects){
     if(objects.length>0){
         sensFloorPosition = {'posX':(objects[0].y*80),'posZ':-(objects[0].x*80),'posY':(Math.floor(objects[0].mV*100)/100)};//TODO desharcodear esto
-		updateNavigatorPosition(sensFloorPosition);
+		updateNavigatorPosition({'posX':(objects[0].y*80),'posZ':-(objects[0].x*80)});
     }
     if(cronoState=="COUNTING"){
         if(objects.length>0){
@@ -361,7 +361,7 @@ var render = function () {
     }
     trajectory.push(sensFloorPosition);
     
-  	updateNavigatorPosition(sensFloorPosition);
+//  	updateNavigatorPosition(sensFloorPosition);
     updateFloor(activeTiles);
 
 };
@@ -371,7 +371,7 @@ function updateNavigatorPosition(pos){
 	console.log(pos);
     sphere.position.x = pos.posX;
     sphere.position.z = pos.posZ;
-    sphere.position.y = pos.posY*4 + 5;
+   // sphere.position.y = pos.posY*4 + 5;
 
 }
 
