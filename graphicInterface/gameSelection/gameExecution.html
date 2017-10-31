@@ -361,13 +361,14 @@ var render = function () {
     }
     trajectory.push(sensFloorPosition);
     
-  //  updateNavigatorPosition(sensFloorPosition);
+  	updateNavigatorPosition(sensFloorPosition);
     updateFloor(activeTiles);
 
 };
 
 
 function updateNavigatorPosition(pos){
+	console.log(pos);
     sphere.position.x = pos.posX;
     sphere.position.z = pos.posZ;
     sphere.position.y = pos.posY*4 + 5;
