@@ -173,9 +173,10 @@ var instantSpeedCum=0;
 var samples=0;
 
 client.on('objects-update', function(objects){
-
-    if(objects.length>0)
+    if(objects.length>0){
         sensFloorPosition = {'posX':(objects[0].y*80),'posZ':-(objects[0].x*80),'posY':(Math.floor(objects[0].mV*100)/100)};//TODO desharcodear esto
+		updateNavigatorPosition(sensFloorPosition);
+    }
     if(cronoState=="COUNTING"){
         if(objects.length>0){
             instantSpeed = Math.floor(objects[0].mV*100)/100;
@@ -304,7 +305,6 @@ renderer.setClearColor( 0xFFFFFF, 1 );
 
 $("#gameViewer #webGLViewPort").append(renderer.domElement);
 
-
 var controls = new THREE.OrbitControls( camera, renderer.domElement );
 
 var lights = [];
@@ -347,9 +347,7 @@ var newGravityCenter={};
 var gravityCenters=[];
 var trajectory=[];
 
-
 var sensFloorPosition={'posX':0.0,'posZ':0.0,'posY':5.0};
-
 var oldGravityCenter={'posX':0.0,'posZ':0.0,'posY':5.0 };
 var render = function () {
     requestAnimationFrame(render);
@@ -363,7 +361,7 @@ var render = function () {
     }
     trajectory.push(sensFloorPosition);
     
-    updateNavigatorPosition(sensFloorPosition);
+  //  updateNavigatorPosition(sensFloorPosition);
     updateFloor(activeTiles);
 
 };
