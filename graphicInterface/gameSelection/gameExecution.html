@@ -173,9 +173,9 @@ var instantSpeedCum=0;
 var samples=0;
 
 client.on('objects-update', function(objects){
-	updateNavigatorPosition({'posX':(objects[0].y*80),'posZ':-(objects[0].x*80)});
 
     if(objects.length>0){
+    	console.log(objects);
         sensFloorPosition = {'posX':(objects[0].y*80),'posZ':-(objects[0].x*80),'posY':(Math.floor(objects[0].mV*100)/100)};//TODO desharcodear esto
 	//	updateNavigatorPosition({'posX':(objects[0].y*80),'posZ':-(objects[0].x*80)});
     }
@@ -362,8 +362,8 @@ var render = function () {
         posZ = (gravityCenters[gravityCenters.length-1].posZ - gravityCenters[gravityCenters.length-2].posZ)*(frame+1)/MAX_STEP+gravityCenters[gravityCenters.length-2].posZ;               
     }
     trajectory.push(sensFloorPosition);
-    
-//  	updateNavigatorPosition(sensFloorPosition);
+   
+   	updateNavigatorPosition(sensFloorPosition);
     updateFloor(activeTiles);
 
 };
