@@ -154,7 +154,7 @@ function composeActivityColor(intensity){//intensity goes from 0 to 127
 // }
 
 function updateFloor(activeTiles){//TODO change tile for active pad
-	console.log(activeTiles);
+	//console.log(activeTiles);
 
 	for(var i=0;i<floor.length; i++){
 		for(var j=0;j<floor[i].tile.length; j++){
