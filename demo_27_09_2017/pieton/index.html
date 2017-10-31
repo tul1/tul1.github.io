@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>demo</title>
+	<style>
+	
+	*{
+		font-family:Arial;
+		
+	}
+	
+	body{
+		margin:0;
+		padding:0;
+		overflow:hidden;
+
+		
+	}
+	#container3d{
+		width:100%;
+		height:1080px;
+		text-align:center		
+	}
+    
+	
+	#menu{
+		padding:50px;
+		background-color:#999999;
+		color:white;
+		font-size:16px;	
+		height:100%;	
+	}
+	#menu button{
+		padding:20px;
+		background-color:#2B3F8C;
+		color:white;
+		border:0;
+		border-radius:20px;
+		font-size:30px;
+		cursor:pointer;
+
+		margin:30px;
+	}
+    </style>
+
+</head>
+
+<body>
+<div id="container3d">
+    <div id="menu">
+
+        
+        <input type="checkbox" id="sombras" value="1" checked="checked" > sombras -  <input type="checkbox" id="autos" value="1"  checked="checked"> autos -
+        <input type="checkbox" id="arboles" value="1" checked="checked"> arboles -  <input type="checkbox" id="edificios" value="1"  checked="checked"> edificios<br>
+        
+
+        
+        <button onclick="iniciar(1)">iniciar Desktop</button>
+        <button onclick="iniciar(2)">iniciar Movil 1024x768</button> 
+        <button onclick="iniciar(3)">iniciar Movil 640x480</button>                
+        
+    </div>
+</div>
+
+<script src="http://192.168.5.5:8000/socket.io/socket.io.js"></script>
+
+<script src="js/jquery-1.9.1.js"></script>
+<script src="js/three.r78.min.js"></script>
+<script src="js/stats.min.js"></script>
+<script src="js/controls/OrbitControls.js"></script>
+<script src="js/loaders/ColladaLoader.js"></script>
+<script src="js/comunes.js"></script>
+<script src="js/visualizador.js"></script> 
+<script src="js/multiMesh.js"></script> 
+<script src="js/escenario.js"></script>
+<script src="js/autoJugador.js"></script> 
+
+<script src="js/trajectory.js"></script> 
+
+<script>
+    var client = io.connect('http://192.168.5.5:8000');
+	var sensFloorPosition={'posX':0,'posZ':0};
+
+
+    client.on('objects-update', function(objects){
+        //console.log('objects-update');
+        for (var i = 0; i < objects.length; i++) {
+        	sensFloorPosition = {'posX':(objects[i].y*80),'posZ':-(objects[i].x*80)};
+            console.log(objects[i].x + ' ' + objects[i].y);
+        }
+    });
+
+
+
+	var stats=new Stats();
+	
+	$("body").append(stats.domElement);
+
+	var domElement=$("#container3d");
+			
+			
+	var ancho=Math.min(1920,window.screen.width);//domElement.width();
+	var alto=Math.min(1080,window.screen.height);//domElement.height();
+
+
+	var vis=DEMOAUTO.visualizador;
+	var esce=DEMOAUTO.escenario;
+	var auto=DEMOAUTO.autoJugador;
+	
+	var scene;
+	var updateSolCount=1;
+
+	var frame=0;
+	
+	function iniciar(modo){	
+	
+	
+		var minW=1920;
+		var minH=1080;
+		
+		if (modo==2){
+			minW=1024;
+			minH=768;
+		} else if (modo==3){
+			minW=640;
+			minH=480;
+		}
+		
+		var screenWidth=window.screen.width;
+		var screenHeight=window.screen.height;		
+		
+		if (screenWidth<screenHeight){
+			var t=screenWidth;screenWidth=screenHeight;screenHeight=t;
+		}
+		
+		var ancho=Math.min(minW,screenWidth);//domElement.width();
+		var alto=Math.min(minH,screenHeight);//domElement.height();
+
+		vis.init("container3d",{
+			"activarSombras":true,
+			"viewportWidth":ancho,
+			"viewportHeight":alto,	
+		});
+	
+		$("#menu").hide();
+		
+		scene=vis.escena;
+		var params={
+			"excluirEdificios":false,
+			"excluirArboles":false,
+			"excluirAutos": false,
+			"totalCuadras":2,		
+		}
+		
+		
+		esce.init(scene,params);
+		esce.startLoad();	
+		
+
+		auto.init(scene,(ancho/alto));
+
+		auto.startLoad();
+		
+		vis.addCamera(auto.cam);
+		vis.addCamera(auto.cam2);		
+		vis.setCamera(1);
+		
+		
+		setTimeout(fase2,500);
+	}	
+	
+	function fase2(){
+		$("#menu").hide();
+		tick();	
+	}
+	
+
+
+	function tick(){
+
+		requestAnimationFrame(tick);
+
+		auto.update();
+
+//		console.log(auto.getPosicionAuto());
+		
+		if (updateSolCount>0){
+			updateSolCount--;
+		} else {
+			var posAuto=auto.getPosicionAuto();
+
+			esce.setTargetSol(posAuto);			
+			updateSolCount=60;
+			esce.updateVisibility([posAuto.x,posAuto.z]);
+		}
+
+
+		vis.doRender();	
+		
+		stats.update();		
+
+	}
+
+
+	iniciar(2);
+	
+</script>
+
+
+</body>
+</html>

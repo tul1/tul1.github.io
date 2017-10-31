@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Demo</title>
+	<style>
+		*{
+			font-family:Arial;	
+		}
+		body{
+			margin:0;
+			padding:0;
+			overflow:hidden;		
+		}
+		#container3d{
+			width:100%;
+			height:1080px;
+			text-align:center		
+		}
+		#menu{
+			padding:50px;
+			background-color:#999999;
+			color:white;
+			font-size:16px;	
+			height:100%;	
+		}
+		#menu button{
+			padding:20px;
+			background-color:#2B3F8C;
+			color:white;
+			border:0;
+			border-radius:20px;
+			font-size:30px;
+			cursor:pointer;
+			margin:30px;
+		}
+    </style>
+
+</head>
+
+<body>
+<div id="container3d">
+</div>
+
+<script src="http://192.168.5.5:8000/socket.io/socket.io.js"></script>
+
+<script src="js/jquery-1.9.1.js"></script>
+<script src="js/three.r78.min.js"></script>
+<script src="js/stats.min.js"></script>
+<script src="js/controls/OrbitControls.js"></script>
+<script src="js/loaders/ColladaLoader.js"></script>
+
+<script src="js/comunes.js"></script>
+<script src="js/visualizador.js"></script> 
+<script src="js/multiMesh.js"></script> 
+<script src="js/escenario.js"></script>
+<script src="js/autoJugador.js"></script> 
+
+<script src="js/trajectory.js"></script> 
+
+<script>
+    var client = io.connect('http://192.168.5.5:8000');
+	var sensFloorPosition={'posX':0,'posZ':0};
+
+    client.on('objects-update', function(objects){
+        for (var i = 0; i < objects.length; i++) {
+        	sensFloorPosition = {'posX':(objects[i].y*80),'posZ':-(objects[i].x*80)};
+        }
+    });
+
+	var stats=new Stats();
+	$("body").append(stats.domElement);
+	var domElement=$("#container3d");
+			
+	var width=Math.min(1920,window.screen.width);//domElement.width();
+	var height=Math.min(1080,window.screen.height);//domElement.height();
+
+	var viewer = SERIOUSGAME.viewer;
+	var scene = SERIOUSGAME.scene;
+	var car = SERIOUSGAME.player;
+	
+	var viewPort;
+	var updateSolCount=1;
+
+	var frame=0;
+	
+	function init(modo){	
+		//ViewPort settings
+		var minW=1920;
+		var minH=1080;
+		if (modo==2){
+			minW=1024;
+			minH=768;
+		} else if (modo==3){
+			minW=640;
+			minH=480;
+		}
+		var screenWidth=window.screen.width;
+		var screenHeight=window.screen.height;		
+		
+		if (screenWidth<screenHeight){
+			var t=screenWidth;screenWidth=screenHeight;screenHeight=t;
+		}
+		
+		var width=Math.min(minW,screenWidth);
+		var height=Math.min(minH,screenHeight);
+
+		var viewerParams = {
+			"castShadows":true,
+			"viewportWidth":width,
+			"viewportHeight":height,	
+		};
+		viewer.init("container3d", viewerParams);		
+		
+		viewPort=viewer.scene;
+
+		var sceneParams={
+			"excludeBuildings":false,
+			"excludeTrees":false,
+			"excludeCars": true,
+			"blocksNumber":2	
+		}
+
+		scene.init(viewPort, sceneParams);
+		scene.startLoad();	
+
+
+		car.init(viewPort,(width/height));
+		car.startLoad();
+		
+		$.each(car.cameras, function(index,value){
+			viewer.addCamera(value);
+		});
+		// viewer.addCamera(car.cam);
+		// viewer.addCamera(car.cam2);		
+		// viewer.setCamera(1);
+		
+		//TEST differents speeds
+		setTimeout(tick,500);
+	}	
+	
+	function tick(){
+		requestAnimationFrame(tick);
+		car.update();
+		var carPosition=car.getPosition();
+		scene.setTargetSun(carPosition);
+
+		scene.updateVisibility([carPosition.x,carPosition.z]);
+		viewer.doRender();
+		stats.update();
+	}
+
+
+	init(2);
+	
+</script>
+
+
+</body>
+</html>
