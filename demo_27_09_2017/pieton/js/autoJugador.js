@@ -32,7 +32,6 @@ var DEMOAUTO =  DEMOAUTO || {};
 				if (e.which==45){
 					velocidad=Math.max(0,velocidad-1);	
 				}
-				
 			});
 			
 			this._scene=scene;
@@ -62,9 +61,7 @@ var DEMOAUTO =  DEMOAUTO || {};
 			this.cam.rotation.y=Math.PI;
 			this.cam.position.set(-6,0.5,100);
 
-
-
-			this._container.add(this.cam);			
+			this. .add(this.cam);			
 			
 			this.cam2=new THREE.PerspectiveCamera(65,aspect, 0.1, 3000); 
 			this.cam2.position.set(0,10,-10.0);
@@ -101,8 +98,6 @@ var DEMOAUTO =  DEMOAUTO || {};
 			this._container.position.z = -(sensFloorPosition.posZ)*10/300;
 			this._container.position.x = (sensFloorPosition.posX)/25-2.75;		
 		
-
-
 //			console.log(ang);
 
 			// this._container.position.y=1;
