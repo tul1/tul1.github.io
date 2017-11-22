@@ -3,8 +3,6 @@ var DEMOAUTO =  DEMOAUTO || {};
 
 
 (function(){
-	
-	
 	var scene;
 	var camZero;
 	var renderer;

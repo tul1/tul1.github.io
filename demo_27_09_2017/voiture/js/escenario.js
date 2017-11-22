@@ -4,11 +4,9 @@ var SERIOUSGAME =  SERIOUSGAME || {};
 
 (function(){
 	
-
 	var MultiMesh=SERIOUSGAME.MultiMesh;
 	
 	function Scene(){
-	
 	    MultiMesh.call(this,"modelos/escenario/","maps/");
 	
 		this._container;
@@ -100,17 +98,16 @@ var SERIOUSGAME =  SERIOUSGAME || {};
 			//***************************************************************************
 			//  _sunLight target is not added to the container or the scene, its position doesn't need to be updated 
 			//	https://github.com/mrdoob/three.js/issues/5555
-			this._container.add(_sunLight.target);			
-			
-			var d=100;			
+			this._container.add(_sunLight.target);
+			var d=100;
 
 			_sunLight.castShadow = true;
 
 			_sunLight.shadow.camera.visible=true;
-			_sunLight.shadow.camera.left = -d;	
+			_sunLight.shadow.camera.left = -d;
 			_sunLight.shadow.camera.right = d;
-			_sunLight.shadow.camera.top = d;				
-			_sunLight.shadow.camera.bottom = -d;				
+			_sunLight.shadow.camera.top = d;
+			_sunLight.shadow.camera.bottom = -d;
 			_sunLight.shadow.camera.near = 0.1;
 			_sunLight.shadow.camera.far = 1000;
 			_sunLight.shadow.bias = 0.0001;
@@ -118,13 +115,6 @@ var SERIOUSGAME =  SERIOUSGAME || {};
 			
 			_sunLight.shadow.mapSize.width = 1024;
 			_sunLight.shadow.mapSize.height = 1024;
-			
-			//var luzHelper=new THREE.DirectionalLightHelper(luzSol,d);
-			//this._container.add(luzHelper);
-	
-			//var luzAmbiente = new THREE.AmbientLight( 0x111111 ); // soft white light
-			//this._container.add( luzAmbiente);					
-		
 		}		
 		
 		this.setTargetSun=function (pos){
@@ -499,7 +489,6 @@ var SERIOUSGAME =  SERIOUSGAME || {};
 		
 		
 		// ***************** Building materials **************************
-		
 		for (var i=1;i<=this._buildings.length;i++){
 			var ed=this._buildings[i-1];
 			var ed_sig=this._buildings[i];
