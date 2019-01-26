@@ -1,0 +1,26 @@
+---
+layout: default
+---
+
+<div class="img-fluid">
+  <img src="{{ site.url }}/assets/images/{{ page.image }}" alt="{{ page.title | escape}}" style="z-index: 0; height: 500px; width: 100%; display: block; padding-top: 20px;">
+</div>
+
+<div class="container">
+  <div class="post-header text-center">
+    <h1 class="drop-shadow">{{ page.title }}</h1>
+    <h3 class="text-muted"> {{page.subtitle}}</h3>
+    <p class="text-muted">
+      {% assign date_format = site.minima.date_format | default: "%A, %-d %b %Y" %}
+      <i class="fa fa-clock-o" aria-hidden="true"></i> &nbsp;{{ page.date | date: date_format }} &emsp;
+      <i class="fa fa-user-o" aria-hidden="true"></i> {{page.author}} &emsp;
+      <i class="fa fa-folder-o" aria-hidden="true"></i> &nbsp;{{ page.categories }}
+    </p>
+  </div>
+  
+  <div class="narrow">
+
+    {{ content }}
+
+  </div>
+</div>

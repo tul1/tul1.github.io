@@ -1,0 +1,179 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>	    
+    <meta name="viewport" content="width=1200">
+
+    <title>Game Selection</title>
+
+</head>
+<body>
+<link rel="stylesheet" href="./bootstrap-theme.min.css"/>
+<link rel="stylesheet" href="./bootstrap.min.css"/>
+<link rel="stylesheet" href="./gameSelection.css"/>
+
+<div id="mainContainer">
+
+	<h3>Game List</h3>
+       <div class="panel panel-default" id="gameList">
+
+        <div class="panel-heading">
+            <div class="panel-title">
+                <div class="text-right boton">
+                    <caption>
+                        <button 
+                            class="btn btn-success" 
+                            onClick="onClickNewGame()">
+                            <span class="glyphicon glyphicon-plus"></span> 
+                            New Game
+                        </button>
+                    </caption>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-body">
+            <table id="gameListTable" class="display" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Created</th>
+                        <th>Modified</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>	  
+                        <td>Traffic Game 1</td>	  
+                        <td>1</td>
+                        <td><small> 2017-09-11 11:31:11 </small></td>	  
+                        <td><small> 2017-09-18 11:21:40 </small></td>
+                        <td>
+                            <a data-toggle="tooltip" title="play"> 
+                                <button 
+                                    class="btn btn-info btn-sm btn-default glyphicon glyphicon-play" 
+                                    onClick="onClickPlayGame(1)">                
+                                </button>
+                    		</a>   
+
+                            <a data-toggle="tooltip" title="edit">
+                                <button
+                                    class="btn btn-warning btn-sm btn-default glyphicon glyphicon-copy" 
+                                    onClick="onClickEditGame(1)">       
+                                </button>
+                            </a>
+
+                            <button 
+                                class="btn btn-danger btn-sm btn-default glyphicon glyphicon-trash" 
+                                onClick="onClickDeleteGame(1,'Traffic Game 1')">
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>    
+                        <td>Traffic Game 2</td>     
+                        <td>1</td>
+                        <td><small> 2017-09-11 11:31:11 </small></td>     
+                        <td><small> 2017-09-18 11:21:40 </small></td>
+                        <td>
+                            <a data-toggle="tooltip" title="play"> 
+                                <button 
+                                    class="btn btn-info btn-sm btn-default glyphicon glyphicon-play" 
+                                    onClick="onClickPlayGame(1)">                
+                                </button>
+                            </a>   
+
+                            <a data-toggle="tooltip" title="edit">
+                                <button
+                                    class="btn btn-warning btn-sm btn-default glyphicon glyphicon-copy" 
+                                    onClick="onClickEditGame(1)">       
+                                </button>
+                            </a>
+
+                            <button 
+                                class="btn btn-danger btn-sm btn-default glyphicon glyphicon-trash" 
+                                onClick="onClickDeleteGame(1,'Traffic Game 2')">
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>3</td>    
+                        <td>Traffic Game 3</td>     
+                        <td>1</td>
+                        <td><small> 2017-09-11 11:31:11 </small></td>     
+                        <td><small> 2017-09-18 11:21:40 </small></td>
+                        <td>
+                            <a data-toggle="tooltip" title="play"> 
+                                <button 
+                                    class="btn btn-info btn-sm btn-default glyphicon glyphicon-play" 
+                                    onClick="onClickPlayGame(1)">                
+                                </button>
+                            </a>   
+
+                            <a data-toggle="tooltip" title="edit">
+                                <button
+                                    class="btn btn-warning btn-sm btn-default glyphicon glyphicon-copy" 
+                                    onClick="onClickEditGame(1)">       
+                                </button>
+                            </a>
+
+                            <button 
+                                class="btn btn-danger btn-sm btn-default glyphicon glyphicon-trash" 
+                                onClick="onClickDeleteGame(1,'Traffic Game 3')">
+                            </button>
+                        </td>
+                    </tr>
+
+
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script src="./jquery.min.js"></script>
+<script src="./bootstrap.min.js"></script>
+
+<script>
+
+	function onClickNewGame(){
+        console.log("newGame");
+        // location.href="/gameExecution.html";
+	}
+	
+	function onClickPlayGame(id){
+        console.log("playGame");
+		// location.href="/gameExecution/"+id;
+        window.location.href="gameExecution.html";
+	}
+	
+	function onClickDeleteGame(id,nombre){
+        console.log("playGame");
+		if(confirm("You are going to delete the game '"+nombre+"' (id:"+id+"). Are you sure you mean this?")){
+			// location.href="/cables/eliminar/"+id;	
+		};
+	}
+	
+	function onClickEditGame(id){
+        console.log("editGame");
+		var url="/cables/modificar/"+id+"/";
+		// window.location.href = url;
+	}
+
+    $('#gameListTable').removeClass('display').addClass('table table-striped table-bordered');
+
+	$(window).ready(function(){
+		$('[data-toggle="tooltip"]').tooltip(); 
+		$("#gameList").show();
+	});
+
+</script>
+
+</body>
+
+</html>

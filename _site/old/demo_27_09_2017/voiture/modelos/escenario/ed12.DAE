@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset><contributor><author></author><authoring_tool>FBX COLLADA exporter</authoring_tool><comments></comments></contributor><created>2016-07-26T03:40:42Z</created><keywords></keywords><modified>2016-07-26T03:40:42Z</modified><revision></revision><subject></subject><title></title><unit meter="1.000000" name="centimeter"></unit><up_axis>Y_UP</up_axis></asset>
+  <library_images>
+    <image id="highrise0365-image" name="highrise0365"><init_from>file://C:\ProyectosSVN\juegoAuto\demoScene\maps\fachadas\Shops0069_Spaz2.jpg</init_from></image>
+    <image id="Map #2-image" name="Map #2"><init_from>file://C:\ProyectosSVN\juegoAuto\demoScene\maps\fachadas\BuildingsOrnate0055_L.jpg</init_from></image>
+  </library_images>
+  <library_materials>
+    <material id="plantabaja7" name="plantabaja7">
+      <instance_effect url="#plantabaja7-fx"/>
+    </material>
+    <material id="fachada7" name="fachada7">
+      <instance_effect url="#fachada7-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="plantabaja7-fx" name="plantabaja7">
+      <profile_COMMON>
+        <technique sid="standard">
+          <phong>
+            <emission>
+              <color sid="emission">0.000000  0.000000 0.000000 1.000000</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.588235  0.588235 0.588235 1.000000</color>
+            </ambient>
+            <diffuse>
+              <texture texture="highrise0365-image" texcoord="CHANNEL0">
+                <extra>
+                  <technique profile="MAYA">
+                    <wrapU sid="wrapU0">TRUE</wrapU>
+                    <wrapV sid="wrapV0">TRUE</wrapV>
+                    <blend_mode>ADD</blend_mode>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.000000  0.000000 0.000000 1.000000</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">2.000000</float>
+            </shininess>
+            <reflective>
+              <color sid="reflective">0.000000  0.000000 0.000000 1.000000</color>
+            </reflective>
+            <reflectivity>
+              <float sid="reflectivity">1.000000</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">1.000000  1.000000 1.000000 1.000000</color>
+            </transparent>
+            <transparency>
+              <float sid="transparency">0.000000</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="fachada7-fx" name="fachada7">
+      <profile_COMMON>
+        <technique sid="standard">
+          <phong>
+            <emission>
+              <color sid="emission">0.000000  0.000000 0.000000 1.000000</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.588235  0.588235 0.588235 1.000000</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Map #2-image" texcoord="CHANNEL0">
+                <extra>
+                  <technique profile="MAYA">
+                    <wrapU sid="wrapU0">TRUE</wrapU>
+                    <wrapV sid="wrapV0">TRUE</wrapV>
+                    <blend_mode>ADD</blend_mode>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.000000  0.000000 0.000000 1.000000</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">2.000000</float>
+            </shininess>
+            <reflective>
+              <color sid="reflective">0.000000  0.000000 0.000000 1.000000</color>
+            </reflective>
+            <reflectivity>
+              <float sid="reflectivity">1.000000</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">1.000000  1.000000 1.000000 1.000000</color>
+            </transparent>
+            <transparency>
+              <float sid="transparency">0.000000</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_geometries>
+    <geometry id="edificio12-lib" name="edificio12Mesh">
+      <mesh>
+        <source id="edificio12-POSITION">
+          <float_array id="edificio12-POSITION-array" count="36">
+-33.981796 -0.000000 10.105865
+-0.081764 -0.000000 10.105865
+-33.981796 0.000000 -10.105869
+-0.081764 0.000000 -10.105869
+-33.981796 23.313499 10.105865
+-0.081764 23.313499 10.105865
+-33.981796 23.313499 -10.105869
+-0.081764 23.313499 -10.105869
+-33.981796 3.000000 10.105865
+-0.081764 3.000000 10.105865
+-0.081764 3.000000 -10.105870
+-33.981796 3.000000 -10.105870
+</float_array>
+          <technique_common>
+            <accessor source="#edificio12-POSITION-array" count="12" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="edificio12-Normal0">
+          <float_array id="edificio12-Normal0-array" count="108">
+0.000000 0.000000 1.000000
+0.000000 0.000000 1.000000
+0.000000 0.000000 1.000000
+0.000000 0.000000 1.000000
+0.000000 0.000000 1.000000
+0.000000 0.000000 1.000000
+0.000000 0.000000 1.000000
+0.000000 0.000000 1.000000
+0.000000 -0.000000 1.000000
+0.000000 -0.000000 1.000000
+0.000000 -0.000000 1.000000
+0.000000 0.000000 1.000000
+1.000000 0.000000 0.000000
+1.000000 0.000000 0.000000
+1.000000 0.000000 0.000000
+1.000000 0.000000 0.000000
+1.000000 0.000000 0.000000
+1.000000 0.000000 0.000000
+1.000000 0.000000 0.000000
+1.000000 0.000000 0.000000
+1.000000 0.000000 0.000000
+1.000000 0.000000 0.000000
+1.000000 0.000000 0.000000
+1.000000 0.000000 0.000000
+0.000000 -0.000000 -1.000000
+0.000000 -0.000000 -1.000000
+0.000000 -0.000000 -1.000000
+0.000000 -0.000000 -1.000000
+0.000000 -0.000000 -1.000000
+0.000000 -0.000000 -1.000000
+0.000000 -0.000000 -1.000000
+0.000000 -0.000000 -1.000000
+0.000000 0.000000 -1.000000
+0.000000 0.000000 -1.000000
+0.000000 0.000000 -1.000000
+0.000000 -0.000000 -1.000000
+</float_array>
+          <technique_common>
+            <accessor source="#edificio12-Normal0-array" count="36" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="edificio12-UV0">
+          <float_array id="edificio12-UV0-array" count="72">
+-2.387642 0.006463
+-0.612880 0.006463
+3.387641 0.006463
+-0.002362 0.006463
+-2.387642 0.006463
+1.002361 0.006463
+1.002361 1.006463
+1.002361 1.006463
+-2.387642 1.006463
+-0.612880 0.006463
+1.408293 0.006463
+1.408293 1.006463
+1.408293 1.006463
+-0.612880 1.006463
+-0.002362 0.006463
+3.387641 1.006463
+3.387641 1.006463
+-0.002362 1.006463
+-2.383506 -0.007608
+-0.515312 -0.007608
+-0.515312 2.023742
+-2.383506 2.023742
+-0.006498 -0.007608
+-0.006498 2.023742
+3.383506 -0.007608
+3.383506 2.023742
+-2.383506 -0.007608
+1.006497 -0.007608
+1.006497 2.023742
+1.006497 2.023742
+-0.515312 -0.007608
+1.505862 -0.007608
+1.505862 2.023742
+1.505862 2.023742
+-0.006498 -0.007608
+3.383506 2.023742
+</float_array>
+          <technique_common>
+            <accessor source="#edificio12-UV0-array" count="36" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="edificio12-VERTEX">
+          <input semantic="POSITION" source="#edificio12-POSITION"/>
+        </vertices>
+        <triangles count="6" material="plantabaja7"><input semantic="VERTEX" offset="0" source="#edificio12-VERTEX"/><input semantic="NORMAL" offset="1" source="#edificio12-Normal0"/><input semantic="TEXCOORD" offset="2" set="0" source="#edificio12-UV0"/><p> 0 0 4 1 1 5 9 2 6 9 3 7 8 4 8 0 5 0 1 12 9 3 13 10 10 14 11 10 15 12 9 16 13 1 17 1 3 24 14 2 25 2 11 26 15 11 27 16 10 28 17 3 29 3</p></triangles>
+        <triangles count="6" material="fachada7"><input semantic="VERTEX" offset="0" source="#edificio12-VERTEX"/><input semantic="NORMAL" offset="1" source="#edificio12-Normal0"/><input semantic="TEXCOORD" offset="2" set="0" source="#edificio12-UV0"/><p> 8 6 26 9 7 27 5 8 28 5 9 29 4 10 21 8 11 18 9 18 30 10 19 31 7 20 32 7 21 33 5 22 20 9 23 19 10 30 34 11 31 24 6 32 35 6 33 25 7 34 23 10 35 22</p></triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_lights>
+    <light id="SceneAmbient" name="SceneAmbient">
+      <technique_common>
+        <ambient>
+          <color>0.207843 0.207843 0.207843</color>
+        </ambient>
+      </technique_common>
+    </light>
+  </library_lights>
+  <library_visual_scenes>
+    <visual_scene id="ed12" name="ed12">
+      <node name="edificio12" id="edificio12" sid="edificio12"><matrix sid="matrix">1.000000 0.000000 0.000000 -200.000000 0.000000 1.000000 -0.000000 0.000000 0.000000 0.000000 1.000000 -211.798691 0.000000 0.000000 0.000000 1.000000</matrix><instance_geometry url="#edificio12-lib"><bind_material><technique_common><instance_material symbol="plantabaja7" target="#plantabaja7"/><instance_material symbol="fachada7" target="#fachada7"/></technique_common></bind_material></instance_geometry><extra><technique profile="FCOLLADA"><visibility>1.000000</visibility></technique></extra></node>
+      <extra><technique profile="MAX3D"><frame_rate>30.000000</frame_rate></technique><technique profile="FCOLLADA"><start_time>0.000000</start_time><end_time>3.333333</end_time></technique></extra>
+      <node>
+        <instance_light url="#SceneAmbient"></instance_light>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#ed12"></instance_visual_scene>
+  </scene>
+</COLLADA>
