@@ -5,7 +5,7 @@ date:   2019-1-25 09:30:00 +0000
 categories: Projects
 tag: Projet
 tag-icon: <i class="fa fa-diamond project-icon-pink" aria-hidden="true"></i>
-image: pogo2.jpg
+image: pogo.jpg
 author: Patricio Tula
 ---
 

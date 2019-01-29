@@ -13,7 +13,9 @@ layout: default
   <div class="container-fluid">
     <div class="row">
       <div class="col-sm-6 offset-sm-3 text-center">
-        <h1 class="brand-text">Nos Projets</h1>
+        <h1 class="brand-text"> <a class="nav-link" href="{{ site.url }}/nos_projets/"> 
+            Nos Projets
+        </a></h1>
       </div>
     </div>
       <div class="row">
@@ -39,7 +41,11 @@ layout: default
   <div class="container-fluid">
     <div class="row header drop-shadow">
       <div class="col-sm-6 offset-sm-3 text-center">
-        <h1 class="white-text header drop-shadow"> Notre Blog Nautique</h1>
+        <h1 class="header white-text drop-shadow"> 
+          <a href="{{ site.url }}/blog/">
+            Notre Blog Nautique
+          </a>
+        </h1>
       </div>
     </div>    
     <div class="row">
@@ -68,7 +74,9 @@ layout: default
             <h6 class="spaced">{{ category_icon }} {{ post.categories }} </h6>
             <h2 class="dark-text"> {{ post.title }} </h2>
             <p>{{ post.excerpt | truncate:165}}</p>
-            <a class="btn btn-brand drop-shadow" href="{{ post.url }}" role="button"><i class="fa fa-folder-open" aria-hidden="true"></i> Lire plus</a>
+            <a class="btn btn-brand-white drop-shadow" href="{{ post.url }}" role="button">
+              <i class="fa fa-folder-open" aria-hidden="true"></i> Lire plus
+            </a>  
           </div>
         {% endif %}
       {% endfor %}

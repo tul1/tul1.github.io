@@ -1,11 +1,11 @@
 ---
 layout: post
-title:  "Welcome to Jekyll!"
-subtitle: Check out all the code styling
-date:   2017-11-25 11:04:12 +0000
-categories: python
+title:  "Article 4"
+subtitle: "Articule 4"
+date:   2019-1-25 09:30:00 +0000
+categories: random
 category_icon: <i class="fa fa-code" aria-hidden="true"></i>
-image: kevin-392517.jpg
+image: pogo.jpg
 ---
 
 This is a post. Open up this post to get more information on how to set a post. These posts will show up under the featured bar located in the Blog area and the latest 3 posts will appear in the _Recent Posts_ in the Home page. Open up this post to get more information on how to set a featured post.

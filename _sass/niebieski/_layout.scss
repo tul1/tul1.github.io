@@ -86,13 +86,32 @@
     background-color: $brand-color;
     border-color: darken($brand-color, 10%);
     margin-bottom: $padding-unit;
-    
     a {
         color: $background-color;
     }
 
     &:hover {
         background-color: darken($brand-color, 10%);
+        text-decoration: none;
+    }
+    &:focus {
+        color: $background-color;
+    }
+
+}
+
+.btn-brand-white {
+    color: $background-color !important;
+    background-color: $brand-color-white;
+    border-color: darken($brand-color-white, 10%);
+    margin-bottom: $padding-unit;
+    
+    a {
+        color: $background-color;
+    }
+
+    &:hover {
+        background-color: darken($brand-color-white, 10%);
         text-decoration: none;
     }
     &:focus {

@@ -12,7 +12,7 @@ dl, dd, ol, ul, figure {
  */
 body {
   font: 400 16px/1.5 "Roboto", Helvetica, Arial, sans-serif;
-  color: #383838;
+  color: #fde0e0;
   background-color: #FDFDFD;
   -webkit-text-size-adjust: 100%;
   -webkit-font-feature-settings: "kern" 1;
@@ -29,7 +29,7 @@ h1, h2, h3, h4, h5, h6 {
   color: #FDFDFD !important; }
 
 .dark-text {
-  color: #383838; }
+  color: #fde0e0; }
 
 .brand-color {
   color: #45C3FF; }
@@ -111,6 +111,13 @@ li > ol {
  */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 400; }
+  h1 a:link, h2 a:link, h3 a:link, h4 a:link, h5 a:link, h6 a:link {
+    text-decoration: none; }
+  h1 a:visited, h2 a:visited, h3 a:visited, h4 a:visited, h5 a:visited, h6 a:visited {
+    text-decoration: none;
+    color: inherit; }
+  h1 a:active, h2 a:active, h3 a:active, h4 a:active, h5 a:active, h6 a:active {
+    color: inherit; }
 
 .spaced {
   margin-top: 15px;
@@ -227,6 +234,19 @@ a {
     background-color: #12b3ff;
     text-decoration: none; }
   .btn-brand:focus {
+    color: #FDFDFD; }
+
+.btn-brand-white {
+  color: #FDFDFD !important;
+  background-color: #a3ddf8;
+  border-color: #74cbf4;
+  margin-bottom: 1.5rem; }
+  .btn-brand-white a {
+    color: #FDFDFD; }
+  .btn-brand-white:hover {
+    background-color: #74cbf4;
+    text-decoration: none; }
+  .btn-brand-white:focus {
     color: #FDFDFD; }
 
 .progress-bar {

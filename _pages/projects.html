@@ -1,13 +1,13 @@
 ---
 layout: page
-title: Nos Projets
+title: Projets
 permalink: /nos_projets/
 ---
 
 <div class="container-fluid">
   <div class="row header">
     <div class="col-sm-6 offset-sm-3 text-center">
-      <h1 class="drop-shadow">Nos Projets</h1>
+      <h1 class="drop-shadow">{{page.title}}</h1>
     </div>
   </div>
   <div class="row">
@@ -18,6 +18,7 @@ permalink: /nos_projets/
             <h5 class="project-tag"> {{ project.tag-icon }} {{ project.tag }}</h5>
             <h3 class="card-title white-text"> {{ project.title }}</h3>
             <p class="project-excerpt">{{ project.excerpt | truncate:165, "...</p>" }}
+            <a class="btn btn-brand drop-shadow" href="{{ project.url }}" role="button"><i class="fa fa-folder-open" aria-hidden="true"></i> Lire plus</a>
         </div>
       </div>
     </div>
