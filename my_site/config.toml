@@ -1,0 +1,53 @@
+baseurl = "https://patriciotula.com"
+builddrafts = false
+canonifyurls = false
+languageCode = "en-US"
+
+contentdir = "content"
+layoutdir = "layouts"
+publishdir = "public"
+
+author = "Patricio Tula"
+title = "Patricio Tula"
+
+theme = "hugo-goa"
+
+## Hugo Built-in Features
+disqusShortname = "https-shenoybr-github-io-hugo-goa-demo" # Comment out to disable Disqus.
+googleAnalytics = "XYZ"
+enableRobotsTXT = true
+
+## Site Settings
+[params]
+author = "Patricio Tula"
+intro = "Software Engineer at OVHCloud"
+description = "Now @OVHCloud. Previously @Orness, @EkumenLabs and @Ideamatic. <br/> \"What is F times 5? It's Fleventy-five.\""
+authorimage = "headshot.jpg"
+dateformat = "Jan 2, 2006"
+
+## Site Meta Settings
+[params.meta]
+description = "Hi! My name is Patricio"
+keywords = "minimalist,blog,goa,hugo,developer"
+
+## Social Accounts
+[params.social]
+github = "tul1"
+linkedin = "patricio-alejandro-tula"
+email = "tula.patricio@gmail.com"
+
+## Extras
+[params.extra]
+# copyright = ""
+poweredby = true
+highlightjs = true
+socialmarkup = true
+toc = false
+displayrssicon = false
+
+## Main Menu
+[[menu.main]]
+    name = "blog"
+    weight = 100
+    identifier = "blog"
+    url = "https://astray.dev"
