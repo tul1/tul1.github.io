@@ -1,42 +1,52 @@
 # DNS setup for patriciotula.com (OVH → Vercel)
 
-The domain `patriciotula.com` is registered at OVH. Name servers stay on OVH (`dns105.ovh.net` / `ns105.ovh.net`). Only the zone records change so traffic reaches Vercel.
+The domain `patriciotula.com` is registered at OVH. Keep OVH nameservers (`dns105.ovh.net` / `ns105.ovh.net`) and only change zone records so traffic reaches Vercel.
+
+Vercel project: `legalops/patriciotula`  
+Aliases already live: https://patriciotula.vercel.app
 
 ## Records to set in OVH DNS zone
+
+From Vercel Domains UI / CLI (current recommendation):
 
 1. **Remove** the old apex A record:
    - `@` → `5.135.141.151` (legacy server)
 
-2. **Add** apex for Vercel:
+2. **Apex** `patriciotula.com`:
    - Type: `A`
    - Name: `@` (or blank)
    - Target: `76.76.21.21`
-   - TTL: default / 300
+   - TTL: 300 (or default)
 
-3. **Add / update** www:
-   - Type: `CNAME`
+3. **www** `www.patriciotula.com`:
+   - Type: `A`
    - Name: `www`
-   - Target: `cname.vercel-dns.com.`
-   - TTL: default / 300
+   - Target: `76.76.21.21`
+   - TTL: 300 (or default)
 
-4. **Do not change** OVH mail records (`MX` for `mx3.mail.ovh.net` / `mx4.mail.ovh.net`) unless you intentionally move email.
+   Alternative (also valid on many OVH setups): `CNAME www → cname.vercel-dns.com.` — use whichever Vercel shows as Verified for your project.
+
+4. **Leave mail alone** — do not change OVH `MX` records (`mx3.mail.ovh.net` / `mx4.mail.ovh.net`) unless you intentionally move email.
 
 ## After DNS propagates
 
-1. In the Vercel project → **Settings → Domains**, add:
-   - `patriciotula.com`
-   - `www.patriciotula.com`
-2. Wait until both show **Valid** and SSL is issued.
+1. Open Vercel → Project **patriciotula** → **Settings → Domains**.
+2. Wait until `patriciotula.com` and `www.patriciotula.com` show **Valid** and SSL is issued.
 3. Verify:
-   ```bash
-   dig +short patriciotula.com A
-   # expect 76.76.21.21
-   dig +short www.patriciotula.com CNAME
-   # expect cname.vercel-dns.com.
-   curl -I https://patriciotula.com
-   ```
+
+```bash
+dig +short patriciotula.com A
+# expect 76.76.21.21
+
+dig +short www.patriciotula.com A
+# expect 76.76.21.21
+
+curl -I https://patriciotula.com
+curl -I https://www.patriciotula.com
+```
 
 ## Notes
 
-- Propagation can take a few minutes to a few hours.
-- If Vercel shows different recommended IPs for your project, prefer the values shown in the Domains UI.
+- Propagation can take minutes to a few hours.
+- You will get an email from Vercel when verification completes.
+- Do **not** switch nameservers to `ns1.vercel-dns.com` unless you want Vercel to fully manage DNS (mail would need reconfiguration).
