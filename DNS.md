@@ -22,4 +22,4 @@ curl -I https://patriciotula.com
 curl -I https://www.patriciotula.com
 ```
 
-`patriciotula.vercel.app` and `www` redirect to `https://patriciotula.com` via `vercel.json`.
+`patriciotula.vercel.app` and `www` redirect to `https://patriciotula.com` via `src/proxy.ts`.
