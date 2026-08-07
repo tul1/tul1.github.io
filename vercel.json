@@ -1,0 +1,16 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "patriciotula.vercel.app" }],
+      "destination": "https://patriciotula.com/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.patriciotula.com" }],
+      "destination": "https://patriciotula.com/:path*",
+      "permanent": true
+    }
+  ]
+}
