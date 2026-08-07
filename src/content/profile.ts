@@ -74,17 +74,6 @@ export const profile = {
         live: undefined as string | undefined,
       },
     },
-    {
-      name: "avalon-rs",
-      role: "Open source · Rust",
-      description:
-        "Implementation of the Avalon social deduction game in Rust — systems thinking applied to game rules and concurrency.",
-      stack: ["Rust"],
-      links: {
-        github: "https://github.com/tul1/avalon-rs",
-        live: undefined as string | undefined,
-      },
-    },
   ],
   experience: [
     {
