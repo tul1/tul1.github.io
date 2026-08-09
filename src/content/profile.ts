@@ -59,6 +59,7 @@ export const profile = {
       links: {
         github: undefined as string | undefined,
         live: undefined as string | undefined,
+        label: undefined as string | undefined,
       },
     },
     {
@@ -70,6 +71,7 @@ export const profile = {
       links: {
         github: undefined as string | undefined,
         live: undefined as string | undefined,
+        label: undefined as string | undefined,
       },
     },
     {
@@ -81,17 +83,43 @@ export const profile = {
       links: {
         github: undefined as string | undefined,
         live: undefined as string | undefined,
+        label: undefined as string | undefined,
+      },
+    },
+    {
+      name: "LegalOps",
+      role: "Side project · AI-assisted legal ops",
+      description:
+        "Operational intelligence platform for labor-law workflows: bulk data ingest, opportunity detection, case prioritization, and draft document generation under professional review. Full-stack product work on top of domain-heavy operations.",
+      stack: ["Next.js", "TypeScript", "AI/LLM", "Tailwind"],
+      links: {
+        github: undefined as string | undefined,
+        live: "https://legal-ops-five.vercel.app",
+        label: "live →",
+      },
+    },
+    {
+      name: "Deudas UOM",
+      role: "Side project · Go API + React",
+      description:
+        "Tooling for calculating and pursuing employer debt owed to the metalworkers’ union (UOM). Go backend with clean architecture (domain, adapters, httpapi), React SPA, and deploy on Vercel (SPA + Go Function) with local sqlite or Turso/Blob adapters.",
+      stack: ["Go", "React", "TypeScript", "SQLite", "Turso", "Vercel"],
+      links: {
+        github: undefined as string | undefined,
+        live: "https://deudas-uom.vercel.app",
+        label: "live →",
       },
     },
     {
       name: "LeapTower",
-      role: "Personal · Game On exhibition",
+      role: "Personal · frontend / interactive",
       description:
-        "Experimental video game built with Federico Marino for Game On — El arte de jugar. Exhibited at Centro Cultural San Martín with over 1,000 visitors.",
-      stack: ["Game", "Interactive"],
+        "Experimental video game (with Federico Marino) exhibited at Centro Cultural San Martín for Game On — over 1,000 visitors. Older work, kept here as a signal of frontend craft and shipping interactive UI beyond backend systems.",
+      stack: ["Frontend", "Interactive", "Game"],
       links: {
         github: undefined as string | undefined,
         live: "http://www.fedemarino.com.ar/leaptower-2/",
+        label: "write-up →",
       },
     },
   ],

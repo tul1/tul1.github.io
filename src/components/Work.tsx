@@ -45,7 +45,7 @@ export function Work() {
                       rel="noopener noreferrer"
                       className="link-underline text-ink-muted hover:text-ink"
                     >
-                      write-up →
+                      {item.links.label ?? "live →"}
                     </a>
                   )}
                   {item.links.github && (
