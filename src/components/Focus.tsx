@@ -8,7 +8,7 @@ export function Focus() {
           focus
         </p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-          What I own
+          Core focus
         </h2>
         <ul className="mt-10 grid gap-8 sm:grid-cols-3">
           {profile.focus.map((item) => (

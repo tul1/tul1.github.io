@@ -4,13 +4,13 @@ Personal portfolio and CV — **Patricio Tula**, Senior Software Engineer.
 
 - Live: https://patriciotula.com
 - Content: [`src/content/profile.ts`](src/content/profile.ts)
-- CV: `/cv.pdf` (generated from the same content)
+- CV download: `/cv.pdf` (source file in [`content/CV_PatricioTula.pdf`](content/CV_PatricioTula.pdf))
 
 ## Develop
 
 ```bash
 npm install
-npm run generate:cv
+npm run sync:cv
 npm run dev
 ```
 
@@ -19,8 +19,10 @@ npm run dev
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Local server |
-| `npm run generate:cv` | Write `public/cv.pdf` |
-| `npm run build` | Generate CV + production build |
+| `npm run sync:cv` | Copy `content/CV_PatricioTula.pdf` → `public/cv.pdf` |
+| `npm run build` | Sync CV + production build |
+
+To update the downloadable CV, replace `content/CV_PatricioTula.pdf` and run `npm run sync:cv` (or build).
 
 ## Deploy
 

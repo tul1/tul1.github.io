@@ -22,6 +22,11 @@ export function SiteNav() {
             </a>
           </li>
           <li>
+            <a href="#education" className="link-underline hover:text-ink">
+              Education
+            </a>
+          </li>
+          <li>
             <a href="#contact" className="link-underline hover:text-ink">
               Contact
             </a>

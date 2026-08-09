@@ -8,26 +8,26 @@ export function Work() {
           selected.work
         </p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-          Projects
+          Highlights
         </h2>
         <ul className="mt-10 divide-y divide-rule">
-          {profile.projects.map((project) => (
-            <li key={project.name} className="project-row py-7">
+          {profile.highlights.map((item) => (
+            <li key={item.name} className="project-row py-7">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="max-w-2xl">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <h3 className="text-lg font-semibold text-ink">
-                      {project.name}
+                      {item.name}
                     </h3>
                     <span className="font-mono text-xs text-ink-muted">
-                      {project.role}
+                      {item.role}
                     </span>
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                    {project.description}
+                    {item.description}
                   </p>
                   <ul className="mt-3 flex flex-wrap gap-2">
-                    {project.stack.map((tech) => (
+                    {item.stack.map((tech) => (
                       <li
                         key={tech}
                         className="font-mono text-[11px] tracking-wide text-accent"
@@ -38,19 +38,19 @@ export function Work() {
                   </ul>
                 </div>
                 <div className="flex shrink-0 gap-4 font-mono text-xs">
-                  {project.links.live && (
+                  {item.links.live && (
                     <a
-                      href={project.links.live}
+                      href={item.links.live}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="link-underline text-ink-muted hover:text-ink"
                     >
-                      live →
+                      write-up →
                     </a>
                   )}
-                  {project.links.github && (
+                  {item.links.github && (
                     <a
-                      href={project.links.github}
+                      href={item.links.github}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="link-underline text-ink-muted hover:text-ink"
@@ -58,8 +58,8 @@ export function Work() {
                       github →
                     </a>
                   )}
-                  {!project.links.live && !project.links.github && (
-                    <span className="text-ink-muted/60">private / demo</span>
+                  {!item.links.live && !item.links.github && (
+                    <span className="text-ink-muted/60">production</span>
                   )}
                 </div>
               </div>
