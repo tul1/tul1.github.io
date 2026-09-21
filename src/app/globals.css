@@ -175,6 +175,29 @@ body {
 .markdown img {
   max-width: 100%;
   height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+.markdown .mermaid-diagram {
+  margin: 1.75em 0;
+  overflow-x: auto;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 1rem 0.75rem;
+}
+
+.markdown .mermaid-diagram svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.markdown .mermaid-fallback {
+  background: var(--paper-raised);
+  color: var(--ink-muted);
 }
 
 .markdown table {
