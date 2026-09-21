@@ -1,0 +1,12 @@
+---
+description: Commit and push finished work without waiting to be asked
+alwaysApply: true
+---
+
+# Commit and push
+
+When the work for a request is done, create a git commit and push to the tracked remote. Do not wait for a separate "commit" or "push" request.
+
+- Follow the existing commit protocol: status, diff, log, HEREDOC message, no secrets, no `--no-verify`, no force push to main unless explicitly requested.
+- Push the current branch (`git push`, or `git push -u origin HEAD` if it has no upstream).
+- If there is nothing to commit, skip the commit. Still push if the branch is ahead of origin.
