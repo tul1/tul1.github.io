@@ -10,13 +10,15 @@ tags:
 
 Claude can write Go. That is not the problem.
 
-The problem is getting it to write Go the way your team expects.
+The problem is getting it to write Go the way this repo already does.
 
-Every new session I found myself repeating the same review comments: propagate `context.Context`, wrap errors, keep handlers off the database, do not invent a `utils` package, write tests the way this repo already writes them, run the project's linters. The code was often technically correct. It was not necessarily code I wanted to merge.
+One generated function wraps errors so `errors.Is` still works. The next one returns `err` bare. One handler uses `r.Context()`. The next one calls `context.Background()`. One change stays inside the packages you already have. The next one invents a `utils` folder and a store interface nobody asked for.
 
-Skills gave me a way to turn those repeated comments into reusable instructions Claude can load when the task matches.
+Those are not failures of language knowledge. They are failures of consistency. The model does not remember last week's review comments.
 
-**The goal is not to make Claude write better Go. It is to stop explaining the same engineering decisions every time you start a new session.**
+Skills gave me a way to turn those comments into instructions Claude can load when the task matches.
+
+**The goal is not to make Claude a better Go developer. It is to make the engineering decisions I already made reusable.**
 
 ## Claude knows Go. It does not know your project
 
@@ -28,7 +30,14 @@ If you already use Claude Code on a backend, you have seen some version of this:
 - Tests exist, and they test nothing you care about.
 - You spend more time reviewing generated code than you would have spent writing the change.
 
-A model already knows the language. What it does not know is **how this team ships Go**. That gap is not a prompt-writing problem you should solve from scratch every Monday. It is a playbook problem.
+It helps to keep four jobs separate:
+
+1. Knowing the language. The model already does this.
+2. Following this project's conventions. Layering, error mapping, how tests are written here.
+3. Generating code that compiles and does what you asked.
+4. Producing software you would merge.
+
+A skill is useful for the second job. It does not replace judgment, tests, or review, and it does not guarantee the third or the fourth. Following a playbook is not the same as shipping maintainable software.
 
 The model is not the senior in the room. You are. The question is whether the agent spends the session fighting that, or following it.
 
@@ -50,7 +59,7 @@ Domain errors live in the service package. Map them to HTTP only in the transpor
 
 That is the whole idea. Not a plugin that patches the model. Not a fine-tune. Procedural knowledge on disk, loaded on demand.
 
-Claude sees the **name** and **description** up front. The body of `SKILL.md` is read only when the skill fires.
+Claude sees the **name** and **description** up front. The body of `SKILL.md` is read only when the skill fires. In a project skill, the slash command comes from the folder name. `name` in the frontmatter is a label.
 
 ```mermaid
 flowchart TD
@@ -63,7 +72,7 @@ flowchart TD
 Two ways to fire it:
 
 1. **Automatically.** You ask for something that matches the description.
-2. **Explicitly.** You type `/skill-name` in Claude Code. Custom commands and skills have been merged; `.claude/skills/deploy/SKILL.md` is `/deploy`.
+2. **Explicitly.** You type `/go-http-endpoint`. Custom commands and skills have been merged; `.claude/skills/deploy/SKILL.md` is `/deploy`.
 
 Where you put the folder decides who sees it:
 
@@ -90,7 +99,7 @@ Because they solve different jobs.
 
 `CLAUDE.md` is always in context. A skill is loaded when the task matches. Dump the HTTP playbook into `CLAUDE.md` and you pay for it on every prompt, including the ones that are not about HTTP.
 
-Facts that should always be true:
+Facts that should always be true belong in `CLAUDE.md`:
 
 ```md
 This is a Go service with PostgreSQL.
@@ -99,24 +108,7 @@ Keep the current package layout: internal/user for domain, internal/httpapi for 
 Run golangci-lint before you consider the change done.
 ```
 
-A procedure you run ten times a month:
-
-```md
----
-name: go-http-endpoint
-description: Use when adding or reviewing an HTTP handler or its service method.
----
-
-When adding an endpoint:
-
-1. Put the handler in internal/httpapi. It may read the request, call a service, write the response.
-2. Do not open a database handle in the handler.
-3. I/O methods take context.Context as the first argument.
-4. Domain errors belong in the service package (ErrNotFound, ErrConflict).
-5. Translate those errors to HTTP status codes only in the transport layer.
-6. Tests use testify/require, not t.Fatal directly.
-7. Run golangci-lint on the packages you touched.
-```
+The procedure for adding an endpoint belongs in a skill: put the handler in `internal/httpapi`, keep SQL in the service, take `context.Context` on I/O, map domain errors to HTTP only at the edge, write tests the way this repo already writes them.
 
 Triggering is not a type system. Descriptions misfire. You still glance at whether the skill actually loaded. That is a reason to keep skills few and the `description` specific, not a reason to put the whole playbook in `CLAUDE.md`.
 
@@ -137,6 +129,8 @@ House rules, the kind you leave as review comments:
 - Domain errors live next to the service.
 - HTTP mapping happens only at the edge.
 - Anything that does I/O takes `context.Context`.
+- Wrap errors so they stay inspectable.
+- Log or return, never both.
 - Tests use `testify/require`.
 - Touched packages must pass `golangci-lint`.
 
@@ -170,13 +164,17 @@ That file is the senior review comment, reusable.
 
 ## Putting it to work
 
-Ask for an endpoint with no extra ceremony:
+These snippets are illustrative. I did not A/B two logged Claude Code sessions for this post. I am not going to invent a transcript. The comparison is against the house rules above, not against a measured run.
+
+### The task
 
 ```text
 Add GET /users/{id} that returns a user from Postgres.
 ```
 
-A typical first draft — valid Go, wrong shape for this repo — looks like this:
+### Without the skill
+
+A typical first draft — valid Go, wrong shape for this repo:
 
 ```go
 func GetUser(w http.ResponseWriter, r *http.Request) {
@@ -195,14 +193,16 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 It compiles. It also:
 
 - queries from the handler
-- ignores `r.Context()`
+- ignores `r.Context()` (`QueryRow` has no `context.Context`; `QueryRowContext` does)
 - leaks the driver error to the client
 - logs and returns the same failure
 - has no `ErrNotFound`, so "missing user" and "postgres is down" are both 500
 
 That is the interesting failure mode. Not a syntax error. A design the model cannot infer from `database/sql`.
 
-Then invoke the skill on purpose:
+### With the skill
+
+Then invoke it on purpose:
 
 ```text
 /go-http-endpoint
@@ -211,7 +211,7 @@ Add GET /users/{id}.
 Follow the skill. Do not query from the handler.
 ```
 
-The playbook produces two packages, not one clever function. Service first — `QueryRowContext` plus `Scan`, which is where `sql.ErrNoRows` actually appears:
+The playbook produces two packages, not one clever function. `s.db` here is `*sql.DB`. `QueryRowContext` returns `*sql.Row`, not `(*sql.Row, error)`. The error shows up on `Scan`, which is also where `sql.ErrNoRows` appears:
 
 ```go
 package user
@@ -230,6 +230,8 @@ func (s *Service) Get(ctx context.Context, id string) (*User, error) {
     return &u, nil
 }
 ```
+
+Mapping `sql.ErrNoRows` to `ErrNotFound` is the convention. The handler can then use `errors.Is` without importing `database/sql`. The original driver error is not in that chain. That is a choice this repo made, not something Go requires.
 
 Handler only translates:
 
@@ -255,7 +257,7 @@ func writeError(w http.ResponseWriter, err error) {
 }
 ```
 
-A test that matches the repo, not a `t.Fatal` tutorial:
+A test that matches the repo, not a `t.Fatal` tutorial. `newTestService` is a stand-in for whatever helper this package already uses:
 
 ```go
 func TestGet_notFound(t *testing.T) {
@@ -265,53 +267,61 @@ func TestGet_notFound(t *testing.T) {
 }
 ```
 
-Five minutes, copy-paste:
-
-```bash
-mkdir -p .claude/skills/go-http-endpoint
-# paste the SKILL.md from above
-```
-
-```text
-claude
-```
-
-```text
-/go-http-endpoint
-
-Review internal/httpapi and internal/user for GET /users/{id}.
-Focus on handler vs service, domain errors, and duplicated logging.
-Do not modify unrelated code.
-```
-
-If you would rather start from a public pack for language mechanics, [samber/cc-skills-golang](https://github.com/samber/cc-skills-golang) exists. Use that for `%w`. Use a **project** skill for architecture. They are not the same job.
-
-## Did it actually help?
-
-A generic model can suggest `context`, `%w`, and `errors.Is` without any skill. If that is all you needed, do not install one.
-
-What the model cannot guess — because it is not in Go, it is in *this* repo — is the table below.
+### What changed
 
 | Decision | Without a project skill | With `go-http-endpoint` |
 | --- | --- | --- |
 | Where does SQL live? | Often in the handler | `internal/user` |
 | Missing row | `http.Error(..., 500)` or raw `err.Error()` | `ErrNotFound` → 404 at the edge |
-| Context | Easy to drop | First argument on I/O |
+| Context | Easy to drop | First argument on I/O; `r.Context()` at the edge |
+| Error wrapping | Bare `err`, or a string that `errors.Is` cannot inspect | `fmt.Errorf("…: %w", err)` |
 | Logging | `log` in the handler | middleware; handler does not log-and-return |
 | Tests | `testing` helpers at random | `require.ErrorIs` |
 | Lint | Maybe | `golangci-lint run` on touched packages |
 
-I did not A/B two logged Claude Code sessions for this post. I am not going to invent a transcript. The comparison that matters is cheaper than that: **read the diff against the house rules.** If Claude still opens `database/sql` in `httpapi`, the skill did not fire or the description is wrong. If the SQL moved and the 404 mapping sat in the handler, the skill is too vague.
+The skill influenced *where* the code went and *which* conventions it followed. It did not prove the query is correct, that the handler is safe to expose, or that the tests cover a closed database. That is still review.
 
-Triggering is not a type system. After a change, check that the skill was actually applied — in Claude Code you can see it load — then judge the diff the way you judge a junior's PR.
+If Claude still opens `database/sql` in `httpapi`, the skill did not fire or the description is wrong. If the SQL moved and the 404 mapping sat in the handler, the skill is too vague. After a change, check that the skill was actually applied, then judge the diff the way you judge a junior's PR.
 
 If that diff is not cheaper than writing the comment yourself, the skill is the wrong one.
 
-## Why bother, if you already know Go
+## What belongs in a skill
 
-Because your judgment should survive the session.
+A skill is worth writing when you keep pasting the same instructions, and those instructions need domain knowledge or a repeatable workflow. Typical candidates:
 
-You already know the house rules. The cost is re-teaching them every Monday to a model with no memory of last week's review. A project skill is that comment, on disk. You review instead of re-teaching. You still own the diff.
+- Project-specific error handling: wrap with `%w`, map `sql.ErrNoRows` at the service boundary, do not log and return.
+- How this repo adds an HTTP endpoint.
+- How this repo writes tests, including the cases people skip.
+- Observability: where logs live, what not to log, which metrics already exist.
+- A code-review checklist you already apply by hand.
+
+A single instruction for one task belongs in the prompt. Standing facts about the repo belong in `CLAUDE.md`. General knowledge the model already handles — "use `%w`", "accept `context.Context`" as slogans with no project shape behind them — does not justify a skill.
+
+Do not create a skill to replace a linter. `golangci-lint` already fails the build. The skill can remind the agent to run it. It cannot be the check.
+
+The point is not to have more skills. It is to stop re-teaching the comments you still leave.
+
+## Install it
+
+Recommended path for this: a project skill, committed with the repo.
+
+```bash
+mkdir -p .claude/skills/go-http-endpoint
+```
+
+Paste the `SKILL.md` from above. Start Claude Code in the repo (`claude`), then run `/skills`. The skill should appear in the list. If it does not, the usual mistake is a file at `.claude/skills/go-http-endpoint.md` instead of `.claude/skills/go-http-endpoint/SKILL.md`.
+
+Invoke it once on purpose with `/go-http-endpoint`. In Claude Code you can also see it load. Then see whether it fires on its own from the description.
+
+The [Agent Skills docs](https://code.claude.com/docs/en/skills) cover the rest of the layout. If you want a public pack for language mechanics, [samber/cc-skills-golang](https://github.com/samber/cc-skills-golang) exists. Use that for `%w`. Use a **project** skill for architecture. They are not the same job.
+
+## Skills can make things worse
+
+A skill is an engineering aid, not a validation mechanism.
+
+It can encode last year's layout. It can fight `CLAUDE.md`, or fight another skill. It can demand an interface this package does not need. It can assume tables, driver, or error names this repo does not have. The agent can follow the file and still produce code that does not compile. It can produce code that compiles and still does the wrong thing: a 404 for a down database, a query that ignores the request context you thought you had propagated, a test that asserts a string instead of `ErrNotFound`.
+
+**Following instructions is not equivalent to producing correct software.** You still own the diff.
 
 That is also why skills rot.
 
@@ -323,16 +333,10 @@ How do you know it went stale? The diffs stop matching the house rules. Handler 
 
 A vague skill makes the agent confidently wrong, faster. An unused skill is a file. A rotting skill is a machine that re-teaches the wrong architecture.
 
-## When not to use a skill
-
-A skill is instructions for an agent. It is not enforcement.
-
-Do not create a skill to replace a linter. Do not create a skill for a one-off. Do not create a skill that restates the Go spec. Create one when you are tired of pasting the same architectural review comment.
-
 ## Leave with one file
 
-Tomorrow, put one project skill next to a handler you actually maintain. Invoke it on purpose once. Then see if Claude loads it on its own.
+Put one project skill next to a handler you actually maintain. Invoke it on purpose once. Then see if Claude loads it on its own.
 
-The goal is not to make Claude write better Go. It is to stop explaining the same engineering decisions every time you start a new session.
+The goal is not to make Claude write better Go. It is to make those decisions reusable, so you stop explaining them every time you start a new session.
 
-Next: [I actually A/B'd two Claude Code sessions](/blog/go-skills-part-2). This part is one playbook.
+That still leaves a harder question. Can a skill help an agent implement a consistent API on a repo that already has conventions, and how do you verify the result? That is [part 2](/blog/go-skills-part-2).
