@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { JsonLdPerson } from "@/components/JsonLdPerson";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteNav } from "@/components/SiteNav";
 import { profile } from "@/content/profile";
 import "./globals.css";
 
@@ -18,46 +20,46 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: `${profile.name} — ${profile.title}`,
+    default: `${profile.name} — blog`,
     template: `%s · ${profile.name}`,
   },
-  description: profile.summary,
+  description: profile.tagline,
   metadataBase: new URL(profile.social.website),
   alternates: {
     canonical: "/",
+    types: {
+      "application/rss+xml": "/feed.xml",
+    },
   },
   keywords: [
     profile.name,
-    profile.fullName,
-    profile.title,
-    "Go",
+    "blog",
+    "software",
     "distributed systems",
-    "Kubernetes",
-    "OVHcloud",
-    "Brest",
-    "software engineer",
+    "infrastructure",
+    "technology",
   ],
   authors: [{ name: profile.fullName, url: profile.social.website }],
   creator: profile.fullName,
   openGraph: {
-    title: `${profile.name} — ${profile.title}`,
+    title: `${profile.name} — blog`,
     description: profile.tagline,
     url: profile.social.website,
     siteName: profile.name,
     locale: "en_US",
-    type: "profile",
+    type: "website",
     images: [
       {
         url: profile.headshot,
         width: 800,
         height: 800,
-        alt: `${profile.name} headshot`,
+        alt: `${profile.name}`,
       },
     ],
   },
   twitter: {
     card: "summary",
-    title: `${profile.name} — ${profile.title}`,
+    title: `${profile.name} — blog`,
     description: profile.tagline,
     images: [profile.headshot],
   },
@@ -77,9 +79,11 @@ export default function RootLayout({
       lang="en"
       className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-paper text-ink font-sans">
+      <body className="flex min-h-full flex-col bg-paper text-ink font-sans">
         <JsonLdPerson />
-        {children}
+        <SiteNav />
+        <div className="flex-1">{children}</div>
+        <SiteFooter />
       </body>
     </html>
   );

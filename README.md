@@ -1,16 +1,32 @@
 # patriciotula.com
 
-Personal portfolio and CV — **Patricio Tula**, Senior Software Engineer.
+Tech blog by **Patricio Tula**.
 
 - Live: https://patriciotula.com
-- Content: [`src/content/profile.ts`](src/content/profile.ts)
-- CV download: `/cv.pdf` (source file in [`content/CV_PatricioTula.pdf`](content/CV_PatricioTula.pdf))
+- Posts: [`content/posts/`](content/posts/) (one Markdown file per note)
+
+## Publish a post
+
+Create `content/posts/my-title.md`:
+
+```md
+---
+title: Title
+date: 2026-09-21
+excerpt: "One or two sentences."
+tags:
+  - go
+---
+
+Markdown body.
+```
+
+The URL slug is the filename without `.md`.
 
 ## Develop
 
 ```bash
 npm install
-npm run sync:cv
 npm run dev
 ```
 
@@ -19,10 +35,7 @@ npm run dev
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Local server |
-| `npm run sync:cv` | Copy `content/CV_PatricioTula.pdf` → `public/cv.pdf` |
-| `npm run build` | Sync CV + production build |
-
-To update the downloadable CV, replace `content/CV_PatricioTula.pdf` and run `npm run sync:cv` (or build).
+| `npm run build` | Production build |
 
 ## Deploy
 
