@@ -38,13 +38,17 @@ export function Mermaid({ chart }: { chart: string }) {
     let cancelled = false;
 
     async function renderChart() {
-      const mermaid = (await loadMermaid()).default;
-      const { svg: rendered } = await mermaid.render(
-        `mermaid-${reactId}`,
-        chart.trim(),
-      );
-      if (!cancelled) {
-        setSvg(rendered);
+      try {
+        const mermaid = (await loadMermaid()).default;
+        const { svg: rendered } = await mermaid.render(
+          `mermaid-${reactId}`,
+          chart.trim(),
+        );
+        if (!cancelled) {
+          setSvg(rendered);
+        }
+      } catch {
+        // Keep the mermaid source visible if the client renderer fails.
       }
     }
 
@@ -56,7 +60,7 @@ export function Mermaid({ chart }: { chart: string }) {
 
   if (!svg) {
     return (
-      <pre className="mermaid-fallback" aria-hidden>
+      <pre className="mermaid-fallback">
         {chart.trim()}
       </pre>
     );

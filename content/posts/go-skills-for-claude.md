@@ -1,5 +1,5 @@
 ---
-title: Skills, part 1: what they are and how to use them
+title: "Skills, part 1: what they are and how to use them"
 date: 2026-09-21
 excerpt: "As a backend developer, skills stopped being optional if I wanted to deliver fast. This first article is the base: what a skill is, how Claude uses it, and where to get one."
 tags:
@@ -92,6 +92,75 @@ The **cons** are real, just smaller if you stay picky:
 - **They rot.** Libraries move. Your house rules move. A skill you never re-read becomes folklore.
 
 For me the trade is obvious if the skill is short, opinionated, and close to how I already work. If it reads like a tutorial for beginners, I would not install it.
+
+## Using it: the prompt, and what comes back
+
+The missing piece of "how to use it" is the output. A skill is not documentation you read. It is a playbook the agent applies to a concrete task. Here is a small one.
+
+I installed `golang-error-handling` from [samber/cc-skills-golang](https://github.com/samber/cc-skills-golang) and pointed Claude at this function — the kind of first draft you get if you only say "load a user by id":
+
+```go
+func GetUser(id string) (*User, error) {
+    user, err := db.Query(id)
+    if err != nil {
+        log.Printf("failed to get user: %v", err)
+        return nil, err
+    }
+    return user, nil
+}
+```
+
+Then I invoked the skill on purpose:
+
+```text
+/golang-error-handling
+Review this GetUser function and rewrite the error path the way the skill would.
+```
+
+That is the whole loop: a file on disk, a slash command (or a prompt that matches the description), a pass over real code.
+
+Without the skill, a model often leaves this as-is, or "cleans it up" in ways that still fail production: return the raw driver error, log and return the same error (duplicate lines in your aggregator), compare errors with `==`, panic if the id is empty.
+
+With `golang-error-handling` loaded, the skill's own rules fire. The short version of that playbook:
+
+1. Always check the error — never `_`
+2. Wrap with context using `fmt.Errorf("...: %w", err)`
+3. Lowercase error strings, no trailing punctuation
+4. `errors.Is` / `errors.As` instead of `==`
+5. Log **or** return, never both
+6. Sentinels for expected cases (`not found`); no `panic` for those
+
+The rewrite I got back looks like this:
+
+```go
+var ErrUserNotFound = errors.New("user not found")
+
+func GetUser(ctx context.Context, id string) (*User, error) {
+    user, err := db.QueryRowContext(ctx, queryUserByID, id)
+    if err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, fmt.Errorf("get user %s: %w", id, ErrUserNotFound)
+        }
+        return nil, fmt.Errorf("get user %s: %w", id, err)
+    }
+    return user, nil
+}
+```
+
+What changed, and why it matters if you already know Go:
+
+| First draft | After the skill |
+| --- | --- |
+| `db.Query` with no `context` | `QueryRowContext` — the call can be cancelled |
+| `log` + `return err` | only return — the caller logs once, at the edge |
+| bare `err` | wrapped with `%w` and the operation name |
+| no notion of "missing user" | `ErrUserNotFound` + `errors.Is` on `sql.ErrNoRows` |
+
+The review pass is as useful as the rewrite. On the first draft the skill would flag, in order: swallowed context, log-and-return, missing wrap, no sentinel for a condition the HTTP layer will want to turn into 404.
+
+That is the result. Not a smarter model. A first draft that already matches the bar I would have written in the review comment.
+
+Install one skill. Point it at a function you would actually merge. Read the diff. If that diff is not cheaper than writing the comment yourself, the skill is the wrong one.
 
 ## Where to download them
 
