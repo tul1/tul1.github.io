@@ -287,10 +287,14 @@ If that diff is not cheaper than writing the comment yourself, the skill is the 
 
 ## What belongs in a skill
 
-A skill is worth writing when you keep pasting the same instructions, and those instructions need domain knowledge or a repeatable workflow. Typical candidates:
+A skill is worth writing when you keep pasting the same instructions, and those instructions need domain knowledge or a repeatable workflow.
+
+Before writing the file, read `CLAUDE.md` and the last two similar diffs. Whatever those already communicate does not belong in the skill. The comments you still leave after that — the closed-database test, the SQL fixture `Create` cannot produce, the sentinel that has to be mapped in `writeError` — those are the skill.
+
+Typical candidates:
 
 - Project-specific error handling: wrap with `%w`, map `sql.ErrNoRows` at the service boundary, do not log and return.
-- How this repo adds an HTTP endpoint.
+- How this repo adds an HTTP endpoint, when that procedure is not obvious from the last handler.
 - How this repo writes tests, including the cases people skip.
 - Observability: where logs live, what not to log, which metrics already exist.
 - A code-review checklist you already apply by hand.
@@ -335,8 +339,10 @@ A vague skill makes the agent confidently wrong, faster. An unused skill is a fi
 
 ## Leave with one file
 
-Put one project skill next to a handler you actually maintain. Invoke it on purpose once. Then see if Claude loads it on its own.
+Pick a recurring change in a repo you actually maintain. Write down what the last two similar diffs and `CLAUDE.md` already show. Put only the rest in a project skill and invoke it on purpose once.
+
+That is how you create the file. It is not how you know the file is worth keeping. On a tidy repo the architecture may already be in the code, and a skill that restates it will not move the PR.
 
 The goal is not to make Claude write better Go. It is to make those decisions reusable, so you stop explaining them every time you start a new session.
 
-That still leaves a harder question. Can a skill help an agent implement a consistent API on a repo that already has conventions, and how do you verify the result? That is [part 2](/blog/go-skills-part-2).
+[Part 2](/blog/go-skills-part-2) is the measurement: can a project skill still change the diff when Claude already has the codebase and `CLAUDE.md`, and how do you decide whether to keep it?

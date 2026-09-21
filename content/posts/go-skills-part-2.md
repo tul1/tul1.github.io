@@ -8,7 +8,7 @@ tags:
   - skills
 ---
 
-[Part 1](/blog/go-skills-for-claude) said I was not going to invent a transcript. This one is the transcript.
+[Part 1](/blog/go-skills-for-claude) is how you decide what belongs in a skill. This one is whether that file is worth keeping once the repo already has conventions on disk.
 
 Same model. Same feature. Same starting commit. One run with `CLAUDE.md` and the existing code. One run with a project skill on top. Then I read both diffs the way I would read two pull requests.
 
@@ -22,7 +22,7 @@ Part 1 treated a skill as a reusable review comment: handlers off the database, 
 
 So the experiment is narrower than "are skills good."
 
-Can a project-specific skill help an agent implement a Go API the way this codebase already ships?
+Does a skill actually improve the implementation when Claude already has an existing Go codebase and its conventions — and if it does, is that improvement the architecture, or a procedure the code never showed?
 
 I did not try to make the baseline look bad. I did not change the feature request between runs. I did not compare different starting trees. I did not assume the skill version would win.
 
@@ -76,9 +76,11 @@ Expected behaviour, frozen before either run:
 - handle a database failure
 - keep SQL out of the handler
 
-## Two isolated Claude Code sessions
+## Two workflows, not two identical prompts
 
 This is not a Cursor chat with a pasted prompt. Skills here are [Claude Code skills](https://code.claude.com/docs/en/skills). Pretending a Cursor rule is the same thing would be lying about the experiment.
+
+It is also not an A/B of the same prompt with one boolean flipped. The baseline session could not load skills (`--disable-slash-commands`). The skill session started with `/implement-go-endpoint`, which inlined the playbook before the agent wrote code. I am comparing two development workflows: codebase plus `CLAUDE.md`, versus that plus an explicit procedure.
 
 ```mermaid
 flowchart TD
@@ -143,6 +145,10 @@ WHERE id = $1 AND status = 'active'
 RETURNING ...
 ```
 
+That predicate is the interesting shared decision. Two `PATCH`es at once: one row matches, one gets `sql.ErrNoRows`, then the follow-up read turns that into 409. If you `SELECT`, see `active`, then `UPDATE` by id only, both callers can succeed. The mutation is atomic. The follow-up read only classifies the miss. It can still race — the row can disappear between `UPDATE` and `SELECT` — but it cannot un-cancel. Neither agent wrapped those two statements in a transaction. For classifying the miss, that is a log-quality race, not a double-cancel.
+
+The skill did not teach this query. Both trees have it. I am not going to credit a playbook for a decision the baseline already made.
+
 On `sql.ErrNoRows`, both went back to the database to distinguish 404 from 409.
 
 That is the result I did not want to fake: **the baseline was already a mergeable PR.** `CLAUDE.md` plus two existing endpoints were enough to keep SQL out of the handler. The skill did not have to rescue a `db.QueryRow` in `httpapi`. The failure mode from part 1 did not show up.
@@ -158,27 +164,32 @@ That is the result I did not want to fake: **the baseline was already a mergeabl
 | Cancel tests after `db.Close()` | missing | service + HTTP |
 | Expired fixture | `Create` then `UPDATE` | `INSERT` with `status = expired` |
 | HTTP 400 on a bad id | tested | mapping exists, no HTTP test |
+| HTTP 409 on `expired` | service only | service only |
 | `go test` / `go vet` / `-race` | exit 0 | exit 0 |
 
-`ErrConflict` is the name the skill used as an example. The baseline, without that hint, picked `ErrInvalidTransition`, which is the better domain name. A skill that says "for example `ErrConflict`" will keep generating `ErrConflict`.
+`ErrConflict` is the name the skill used as an example. The baseline, without that hint, picked `ErrInvalidTransition`. That is the better domain name. `ErrConflict` is the HTTP status in domain clothing. `ErrInvalidTransition` names the rule: this status cannot become cancelled. Baseline also puts the current status in the wrap (`status %s`), so a log can tell expired from already-cancelled. Both still map to one 409. If the team later needs two conflict bodies, `ErrConflict` has already collapsed them. A skill that says "for example `ErrConflict`" will keep generating `ErrConflict`.
 
-The baseline reused `Get` on the update miss, so a missing id wraps twice: `cancel subscription X: get subscription X: subscription not found`. The skill wrap is cleaner. It also scans a `status` it never puts in the error. Trade.
+Reusing `Get` on the update miss keeps one "load by id" path and reuses UUID validation. The cost is a double wrap: `cancel subscription X: get subscription X: subscription not found`. The extra `SELECT status` wraps `ErrNotFound` once, then throws `status` away. I would reuse `Get` unless the wrap bothers you enough to flatten it. I would not invent a second query that ignores the column it scanned.
 
-The skill's test checklist is the one place the playbook clearly moved the diff. Step 9 said: copy `TestGetDatabaseFailure`, and insert `expired` with SQL. Both show up only in the skill tree. The baseline agent *claimed* a persistence-failure test in its summary. The tree does not contain one for `Cancel`.
+The skill's test checklist is the one place the playbook clearly moved the diff. Step 9 said: copy `TestGetDatabaseFailure`, and insert `expired` with SQL. Both show up only in the skill tree. The baseline agent *claimed* a persistence-failure test in its summary. The tree does not contain one for `Cancel`. Read the diff. Do not grade the summary.
+
+`go test` was exit 0 on both. That is not the same as the frozen expected behaviour. Neither tree has an HTTP test for expired → 409, which was on the list before either run. The suites passed because that case was never asserted at the HTTP layer. Passing tests means the tests you wrote passed.
 
 I ran the suites myself after both agents finished. No silent fixes.
 
 ```text
 # experiment/baseline @ ff4e9c5
+# go test -p 1 -count=1 ./...
 ok  .../internal/httpapi        0.420s
 ok  .../internal/subscription   0.454s
 
 # experiment/skill @ ff1d528
+# go test -p 1 -count=1 ./...
 ok  .../internal/httpapi        0.427s
 ok  .../internal/subscription   0.475s
 ```
 
-`go vet` and `go test -race` were also exit 0 on both.
+`go vet` and `go test -p 1 -race` were also exit 0 on both.
 
 ## Would I request changes before merge?
 
@@ -198,6 +209,8 @@ Neither PR is unfinished. Calling one "better Go" would overstate a naming diffe
 - SQL fixtures for states `Create` cannot produce.
 - Report the test command you actually ran.
 
+Those are procedures. The last two endpoints do not show you how to insert `expired`. `CLAUDE.md` says "cover meaningful failure scenarios"; it does not say "copy `TestGetDatabaseFailure` for every new method." That gap is what the skill moved.
+
 ## What was redundant
 
 The baseline already followed these, because `CLAUDE.md` and the existing code already said them:
@@ -207,7 +220,7 @@ The baseline already followed these, because `CLAUDE.md` and the existing code a
 - wrap with `fmt.Errorf("verb noun: %w", err)`
 - do not add a store interface for one `*sql.DB`
 
-Restating standing rules in the skill did not distinguish the two diffs. That is the trap from part 1, measured: **a skill that duplicates `CLAUDE.md` is context you are paying for twice.**
+Restating standing rules in the skill did not distinguish the two diffs. **A skill that duplicates what the repo already communicates is context you are paying for twice.** A skill that captures a procedure the code and `CLAUDE.md` do not already show — the forgotten test, the fixture `Create` cannot produce — is the one I would keep.
 
 ## Would I keep this skill in a real repo?
 
@@ -217,20 +230,49 @@ Keep it if the team still pastes the same review comments after `CLAUDE.md` exis
 
 A rotting skill is worse than no skill. This one would keep teaching `ErrConflict` after the team had already picked `ErrInvalidTransition`.
 
-## What I am not claiming
+## What I observed, and what I am not claiming
 
-I am not claiming skills do not work. I am claiming that on n=1, with a tidy fixture and a real `CLAUDE.md`, **the playbook did not need to teach package boundaries.** The interesting miss was the one part 1 already warned about: tests that exist, and tests that cover what you care about, are not the same thing.
+Observed, n = 1, this fixture:
 
-Part 1's scary first draft — SQL in the handler, `log` and return, raw driver error as 500 — is still the reason to write a skill when the repo is messy or the agent has not seen the layout. This fixture was not messy. The skill then behaves like a checklist, not like a compiler.
+- Both diffs were mergeable. Neither put SQL in the handler.
+- The shared `UPDATE ... AND status = 'active'` was not a skill effect.
+- The skill changed the sentinel name, the follow-up query, and which tests were written.
+- The baseline summary claimed a Cancel database-failure test that is not in the tree.
+- Independent `go test -p 1 -count=1 ./...`, `go vet ./...`, and `go test -p 1 -race ./...` exited 0 on both.
+
+This suggests, for a tidy repo with a real `CLAUDE.md`, that a project skill behaves like a checklist, not like a compiler. Architecture may already be in the last two endpoints. Tests people skip may not.
+
+It does not show that skills fail in a messy repo. Part 1's first draft — SQL in the handler, `log` and return, raw driver error as 500 — is still the reason to write a skill when the agent has not seen the layout. This fixture was not messy. n = 1 cannot tell you the next session will look the same.
 
 If you want the diffs, start here:
 
-- [experiment/comparison.md](https://github.com/tul1/go-skills-experiment/blob/main/experiment/comparison.md)
-- branch [`experiment/baseline`](https://github.com/tul1/go-skills-experiment/tree/experiment/baseline)
-- branch [`experiment/skill`](https://github.com/tul1/go-skills-experiment/tree/experiment/skill)
+| What | Where |
+| --- | --- |
+| Fixture (no cancel) | commit [`904fe37`](https://github.com/tul1/go-skills-experiment/commit/904fe37) |
+| Skill | [`.claude/skills/implement-go-endpoint/SKILL.md`](https://github.com/tul1/go-skills-experiment/blob/main/.claude/skills/implement-go-endpoint/SKILL.md) |
+| Feature request | [`experiment/raw/feature-request.txt`](https://github.com/tul1/go-skills-experiment/blob/main/experiment/raw/feature-request.txt) |
+| Skill prompt | [`experiment/raw/skill-prompt.txt`](https://github.com/tul1/go-skills-experiment/blob/main/experiment/raw/skill-prompt.txt) |
+| How the runs were launched | [`experiment/README.md`](https://github.com/tul1/go-skills-experiment/blob/main/experiment/README.md) |
+| Comparison | [`experiment/comparison.md`](https://github.com/tul1/go-skills-experiment/blob/main/experiment/comparison.md) |
+| Baseline tree | branch [`experiment/baseline`](https://github.com/tul1/go-skills-experiment/tree/experiment/baseline) @ `ff4e9c5` |
+| Skill tree | branch [`experiment/skill`](https://github.com/tul1/go-skills-experiment/tree/experiment/skill) @ `ff1d528` |
+
+Verify either tree with:
+
+```bash
+go test -p 1 -count=1 ./...
+go vet ./...
+go test -p 1 -race ./...
+```
+
+`-p 1` is because the packages share one test database. That is in `CLAUDE.md`, not something I added after the fact.
+
+To try the same method on your own service: write down what the last two endpoints and `CLAUDE.md` already show. Put only the rest in a project skill. Implement the next comparable feature twice — once without the skill, once with `/your-skill`. Compare the diffs, the behaviour, the tests, and the noise. Keep the file if the second review is cheaper. Simplify it if half the bullets did nothing. Delete it if it only restated the code.
 
 ## Leave with one measurement
 
 Write the skill for the comment you still leave on generated tests. Do not write it to re-explain a layout the last two endpoints already show.
 
 The goal is still not to make Claude write better Go. It is to stop explaining the same engineering decisions every time you start a new session. After this run I would put the test checklist in the skill, and leave the architecture in `CLAUDE.md` and the code.
+
+Both implementations pass their tests. That still does not tell me how they behave at runtime. That is next.
