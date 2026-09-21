@@ -335,4 +335,4 @@ Tomorrow, put one project skill next to a handler you actually maintain. Invoke 
 
 The goal is not to make Claude write better Go. It is to stop explaining the same engineering decisions every time you start a new session.
 
-Next: more than one skill in the same repo, then agents. This part is one playbook.
+Next: [I actually A/B'd two Claude Code sessions](/blog/go-skills-part-2). This part is one playbook.
