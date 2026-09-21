@@ -1,14 +1,14 @@
 ---
 title: "Skills, part 2: did the playbook change the diff?"
 date: 2026-09-21
-excerpt: "I ran the same Go endpoint twice in Claude Code: once with CLAUDE.md only, once with a project skill. Both PRs were mergeable. The skill changed the tests, not the architecture."
+excerpt: "I ran the same Go endpoint twice in Claude Code: once with CLAUDE.md only, once with a project skill. The baseline was already a reasonable PR. The skill changed the tests, not the architecture."
 tags:
   - go
   - claude
   - skills
 ---
 
-[Part 1](/blog/go-skills-for-claude) is how you decide what belongs in a skill. This one is whether that file is worth keeping once the repo already has conventions on disk.
+[Part 1](/blog/go-skills-for-claude) encoded a first skill: architecture, layout, and Go implementation rules. This one asks which of those instructions were worth keeping once the repo already had conventions on disk.
 
 Same model. Same feature. Same starting commit. One run with `CLAUDE.md` and the existing code. One run with a project skill on top. Then I read both diffs the way I would read two pull requests.
 
@@ -18,7 +18,7 @@ The fixture, both implementations, the skill, and the raw command output are in 
 
 ## The question
 
-Part 1 treated a skill as a reusable review comment: handlers off the database, domain errors at the edge, context on I/O. The interesting claim is not "Claude can write `fmt.Errorf("%w")"`. It is whether a **project** playbook changes the PR when the repo already has conventions on disk.
+Part 1 treated a skill as a reusable review comment: handlers off the database, domain errors at the edge, context on I/O. That file was a first encoding. This article does not go back and trim it to flatter the results. It asks which of those instructions still add value when the repo already has conventions on disk.
 
 So the experiment is narrower than "are skills good."
 
@@ -141,17 +141,18 @@ Neither imported `database/sql` from `httpapi`. Neither invented a store interfa
 ```sql
 UPDATE subscriptions
 SET status = 'cancelled'
-WHERE id = $1 AND status = 'active'
+WHERE id = $1
+  AND status = 'active'
 RETURNING ...
 ```
 
-That predicate is the interesting shared decision. Two `PATCH`es at once: one row matches, one gets `sql.ErrNoRows`, then the follow-up read turns that into 409. If you `SELECT`, see `active`, then `UPDATE` by id only, both callers can succeed. The mutation is atomic. The follow-up read only classifies the miss. It can still race — the row can disappear between `UPDATE` and `SELECT` — but it cannot un-cancel. Neither agent wrapped those two statements in a transaction. For classifying the miss, that is a log-quality race, not a double-cancel.
+That predicate matters. If you `SELECT`, see `active`, then `UPDATE` by id only, two concurrent cancellations can both succeed. The conditional `UPDATE` makes the state check and the transition one database operation: only a request that actually updates an active row gets the `RETURNING` tuple. A miss is `sql.ErrNoRows`. The follow-up read only classifies that miss as 404 or 409. It sees the row at the time of that query, not necessarily at the instant the `UPDATE` returned no rows. The mutation cannot double-cancel. The classification can still race. Neither agent wrapped the two statements in a transaction.
 
-The skill did not teach this query. Both trees have it. I am not going to credit a playbook for a decision the baseline already made.
+The skill did not teach this query. Both trees already have it. I am not going to credit a playbook for a decision the baseline already made.
 
 On `sql.ErrNoRows`, both went back to the database to distinguish 404 from 409.
 
-That is the result I did not want to fake: **the baseline was already a mergeable PR.** `CLAUDE.md` plus two existing endpoints were enough to keep SQL out of the handler. The skill did not have to rescue a `db.QueryRow` in `httpapi`. The failure mode from part 1 did not show up.
+That is the result I did not want to fake: **the baseline was already a reasonable PR.** It followed the existing architecture and passed its tests. It still needed review comments. `CLAUDE.md` plus two existing endpoints were enough to keep SQL out of the handler. The skill did not have to rescue a `db.QueryRow` in `httpapi`. The failure mode illustrated in part 1 did not show up.
 
 ## Where they differed
 
@@ -171,9 +172,11 @@ That is the result I did not want to fake: **the baseline was already a mergeabl
 
 Reusing `Get` on the update miss keeps one "load by id" path and reuses UUID validation. The cost is a double wrap: `cancel subscription X: get subscription X: subscription not found`. The extra `SELECT status` wraps `ErrNotFound` once, then throws `status` away. I would reuse `Get` unless the wrap bothers you enough to flatten it. I would not invent a second query that ignores the column it scanned.
 
-The skill's test checklist is the one place the playbook clearly moved the diff. Step 9 said: copy `TestGetDatabaseFailure`, and insert `expired` with SQL. Both show up only in the skill tree. The baseline agent *claimed* a persistence-failure test in its summary. The tree does not contain one for `Cancel`. Read the diff. Do not grade the summary.
+The skill's test checklist is the one place the playbook clearly moved the diff. Step 9 said: copy `TestGetDatabaseFailure`, and insert `expired` with SQL. Both show up only in the skill tree.
 
-`go test` was exit 0 on both. That is not the same as the frozen expected behaviour. Neither tree has an HTTP test for expired → 409, which was on the list before either run. The suites passed because that case was never asserted at the HTTP layer. Passing tests means the tests you wrote passed.
+The baseline agent's final summary is the more useful miss. It claimed a persistence-failure test for Cancel. The tree does not contain one. **An agent's summary is not evidence that the described implementation or tests actually exist.** This experiment compares diffs and independently run tests, not how each session described its work. Inspect the diff. Run the tests. Do not grade the write-up.
+
+`go test` was exit 0 on both. That is not the same as the frozen expected behaviour. Neither tree has an HTTP test for expired → 409, which was on the list before either run. The suites passed because that case was never asserted at the HTTP layer. Passing tests means the tests you wrote passed. It does not make the generated code production-ready.
 
 I ran the suites myself after both agents finished. No silent fixes.
 
@@ -199,7 +202,7 @@ Baseline: add the Cancel database-failure tests the fixture already shows how to
 
 Skill: either reuse `Get` or stop discarding `status`; rename `ErrConflict` if the team does not use that word.
 
-Neither PR is unfinished. Calling one "better Go" would overstate a naming difference and one extra test file section.
+Neither PR is unfinished. Neither is production-ready just because the tests passed. Calling one "better Go" would overstate a naming difference and one extra test file section.
 
 ## What was useful in the skill
 
@@ -234,7 +237,7 @@ A rotting skill is worse than no skill. This one would keep teaching `ErrConflic
 
 Observed, n = 1, this fixture:
 
-- Both diffs were mergeable. Neither put SQL in the handler.
+- Both diffs were reasonable PRs. Neither put SQL in the handler. Both still needed review comments.
 - The shared `UPDATE ... AND status = 'active'` was not a skill effect.
 - The skill changed the sentinel name, the follow-up query, and which tests were written.
 - The baseline summary claimed a Cancel database-failure test that is not in the tree.
@@ -242,7 +245,7 @@ Observed, n = 1, this fixture:
 
 This suggests, for a tidy repo with a real `CLAUDE.md`, that a project skill behaves like a checklist, not like a compiler. Architecture may already be in the last two endpoints. Tests people skip may not.
 
-It does not show that skills fail in a messy repo. Part 1's first draft — SQL in the handler, `log` and return, raw driver error as 500 — is still the reason to write a skill when the agent has not seen the layout. This fixture was not messy. n = 1 cannot tell you the next session will look the same.
+It does not show that skills fail in a messy repo. The design illustrated in part 1 — SQL in the handler, `log` and return, raw driver error as 500 — is still a reason to write a skill when the agent has not seen the layout. This fixture was not messy. n = 1 cannot tell you the next session will look the same.
 
 If you want the diffs, start here:
 
@@ -272,6 +275,15 @@ To try the same method on your own service: write down what the last two endpoin
 ## Leave with one measurement
 
 Write the skill for the comment you still leave on generated tests. Do not write it to re-explain a layout the last two endpoints already show.
+
+The practical test is the review queue. Look at the comments you keep leaving on AI-generated diffs:
+
+- Which mistakes or omissions appear repeatedly?
+- Which conventions are already documented but ignored?
+- Which verification procedures are consistently forgotten?
+- Which of those instructions would still be useful on the next comparable task?
+
+If an instruction remains necessary across repeated tasks, it may be worth encoding in a skill. If the skill only repeats information the agent already follows, simplify or remove it.
 
 The goal is still not to make Claude write better Go. It is to stop explaining the same engineering decisions every time you start a new session. After this run I would put the test checklist in the skill, and leave the architecture in `CLAUDE.md` and the code.
 

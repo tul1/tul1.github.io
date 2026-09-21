@@ -20,6 +20,8 @@ Skills gave me a way to turn those comments into instructions Claude can load wh
 
 **The goal is not to make Claude a better Go developer. It is to make the engineering decisions I already made reusable.**
 
+The skill in this post is a first encoding of those decisions: architecture, layout, and Go implementation rules. [Part 2](/blog/go-skills-part-2) evaluates which of those instructions actually add value once Claude already has the codebase and `CLAUDE.md`. I did not go back and trim the file to make that run look better.
+
 ## Claude knows Go. It does not know your project
 
 If you already use Claude Code on a backend, you have seen some version of this:
@@ -114,7 +116,7 @@ Triggering is not a type system. Descriptions misfire. You still glance at wheth
 
 ## A small Go skill, from scratch
 
-I am not going to demo "Claude discovered `%w`." That does not need a skill. I am going to demo a skill that knows **how this service is shaped**.
+I am not going to demo "Claude discovered `%w`." That does not need a skill. I am going to demo a first attempt at encoding **how this service is shaped**. Whether every bullet is worth keeping is a later measurement, not a claim I get to make from the file itself.
 
 Imagine a boring user service:
 
@@ -160,11 +162,11 @@ You are implementing a change in this repository, not writing a Go tutorial.
 7. After edits, run: golangci-lint run ./internal/user/... ./internal/httpapi/...
 ```
 
-That file is the senior review comment, reusable.
+That file is the senior review comment, reusable. It is also a first encoding, not a proof that every bullet will move the next PR.
 
 ## Putting it to work
 
-These snippets are illustrative. I did not A/B two logged Claude Code sessions for this post. I am not going to invent a transcript. The comparison is against the house rules above, not against a measured run.
+These snippets are illustrative. They show the conventions the skill is trying to communicate. I did not A/B two logged Claude Code sessions for this post, and I am not going to invent a transcript. They do not claim that Claude without a skill necessarily puts SQL in the handler, drops `r.Context()`, or mishandles errors. [Part 2](/blog/go-skills-part-2) is the measured comparison; the baseline there already followed the existing architecture.
 
 ### The task
 
@@ -172,9 +174,9 @@ These snippets are illustrative. I did not A/B two logged Claude Code sessions f
 Add GET /users/{id} that returns a user from Postgres.
 ```
 
-### Without the skill
+### A draft that ignores the house rules
 
-A typical first draft — valid Go, wrong shape for this repo:
+Valid Go, wrong shape for this repo. This is the kind of design the playbook exists to name, not a claim about what every session without a skill produces:
 
 ```go
 func GetUser(w http.ResponseWriter, r *http.Request) {
@@ -198,11 +200,11 @@ It compiles. It also:
 - logs and returns the same failure
 - has no `ErrNotFound`, so "missing user" and "postgres is down" are both 500
 
-That is the interesting failure mode. Not a syntax error. A design the model cannot infer from `database/sql`.
+That is the interesting failure mode the skill is encoding. Not a syntax error. A design that `database/sql` does not forbid, and that this repo does.
 
-### With the skill
+### Following the playbook
 
-Then invoke it on purpose:
+Invoke it on purpose:
 
 ```text
 /go-http-endpoint
@@ -211,7 +213,7 @@ Add GET /users/{id}.
 Follow the skill. Do not query from the handler.
 ```
 
-The playbook produces two packages, not one clever function. `s.db` here is `*sql.DB`. `QueryRowContext` returns `*sql.Row`, not `(*sql.Row, error)`. The error shows up on `Scan`, which is also where `sql.ErrNoRows` appears:
+The playbook describes two packages, not one clever function. `s.db` here is `*sql.DB`. `QueryRowContext` returns `*sql.Row`, not `(*sql.Row, error)`. The error shows up on `Scan`, which is also where `sql.ErrNoRows` appears:
 
 ```go
 package user
@@ -267,21 +269,23 @@ func TestGet_notFound(t *testing.T) {
 }
 ```
 
-### What changed
+### What the playbook is communicating
 
-| Decision | Without a project skill | With `go-http-endpoint` |
+| Decision | Draft that ignores the house rules | Draft that follows `go-http-endpoint` |
 | --- | --- | --- |
-| Where does SQL live? | Often in the handler | `internal/user` |
+| Where does SQL live? | In the handler | `internal/user` |
 | Missing row | `http.Error(..., 500)` or raw `err.Error()` | `ErrNotFound` → 404 at the edge |
-| Context | Easy to drop | First argument on I/O; `r.Context()` at the edge |
+| Context | Absent | First argument on I/O; `r.Context()` at the edge |
 | Error wrapping | Bare `err`, or a string that `errors.Is` cannot inspect | `fmt.Errorf("…: %w", err)` |
 | Logging | `log` in the handler | middleware; handler does not log-and-return |
 | Tests | `testing` helpers at random | `require.ErrorIs` |
-| Lint | Maybe | `golangci-lint run` on touched packages |
+| Lint | Missing | `golangci-lint run` on touched packages |
 
-The skill influenced *where* the code went and *which* conventions it followed. It did not prove the query is correct, that the handler is safe to expose, or that the tests cover a closed database. That is still review.
+The table is a map of the conventions, not a measured before-and-after. Whether Claude needed the file for the architecture is an empirical question. [Part 2](/blog/go-skills-part-2) is that measurement: on a tidy repo, the baseline already kept SQL out of the handler. The playbook's lasting value there was the implementation and verification procedure, not restating the layout.
 
-If Claude still opens `database/sql` in `httpapi`, the skill did not fire or the description is wrong. If the SQL moved and the 404 mapping sat in the handler, the skill is too vague. After a change, check that the skill was actually applied, then judge the diff the way you judge a junior's PR.
+The examples also do not prove the query is correct, that the handler is safe to expose, or that the tests cover a closed database. That is still review.
+
+If you do invoke the skill and Claude still opens `database/sql` in `httpapi`, the skill did not fire or the description is wrong. If the SQL moved and the 404 mapping sat in the handler, the skill is too vague. After a change, check that the skill was actually applied, then judge the diff the way you judge a junior's PR.
 
 If that diff is not cheaper than writing the comment yourself, the skill is the wrong one.
 
@@ -289,7 +293,11 @@ If that diff is not cheaper than writing the comment yourself, the skill is the 
 
 A skill is worth writing when you keep pasting the same instructions, and those instructions need domain knowledge or a repeatable workflow.
 
-Before writing the file, read `CLAUDE.md` and the last two similar diffs. Whatever those already communicate does not belong in the skill. The comments you still leave after that — the closed-database test, the SQL fixture `Create` cannot produce, the sentinel that has to be mapped in `writeError` — those are the skill.
+The most useful question for an experienced engineer is not how to create `SKILL.md`. It is which recurring engineering decisions deserve one.
+
+[Part 2](/blog/go-skills-part-2) is a concrete case. The baseline agent followed the repository's architecture from the existing code and `CLAUDE.md`. What it skipped was a persistence-failure test for the new endpoint. Repeating the whole layout in a skill would have duplicated knowledge the agent already used. A small implementation playbook that includes the missing verification procedure is the skill worth keeping.
+
+Before writing the file, read `CLAUDE.md` and the last two similar diffs. Whatever those already communicate does not belong in the skill. The comments you still leave after that — the closed-database test, the SQL fixture `Create` cannot produce, the sentinel that has to be mapped in `writeError` — those are the skill. The skill should complement what the repository already shows, not copy it.
 
 Typical candidates:
 
@@ -339,10 +347,17 @@ A vague skill makes the agent confidently wrong, faster. An unused skill is a fi
 
 ## Leave with one file
 
+Creating a skill is iterative:
+
+1. Identify the recurring engineering decisions.
+2. Encode them.
+3. Evaluate whether they change the diff.
+4. Remove anything that only duplicates what the repository already communicates.
+
 Pick a recurring change in a repo you actually maintain. Write down what the last two similar diffs and `CLAUDE.md` already show. Put only the rest in a project skill and invoke it on purpose once.
 
-That is how you create the file. It is not how you know the file is worth keeping. On a tidy repo the architecture may already be in the code, and a skill that restates it will not move the PR.
+That is how you create the file. It is not how you know the file is worth keeping. The skill in this post is step 2. [Part 2](/blog/go-skills-part-2) is step 3: the same kind of change, measured, with the codebase and `CLAUDE.md` already in context.
+
+On a tidy repo the architecture may already be in the code. A skill that restates it will not move the PR. The instructions worth maintaining are the ones that still change the work.
 
 The goal is not to make Claude write better Go. It is to make those decisions reusable, so you stop explaining them every time you start a new session.
-
-[Part 2](/blog/go-skills-part-2) is the measurement: can a project skill still change the diff when Claude already has the codebase and `CLAUDE.md`, and how do you decide whether to keep it?
