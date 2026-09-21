@@ -4,7 +4,7 @@ export const profile = {
   title: "Software Engineer",
   company: "OVHcloud",
   location: "Brest, France",
-  tagline: "Notes on software, systems, and infrastructure.",
+  tagline: "A log of projects, notes, and things I learn as I go.",
   bio: "I'm a software engineer at OVHcloud, based in Brest. I work on distributed systems and high-performance infrastructure — real-time, low-latency services at scale.",
   headshot: "/headshot.jpg",
   stack: [

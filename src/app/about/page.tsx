@@ -36,8 +36,9 @@ export default function AboutPage() {
         <div className="max-w-xl space-y-4 text-base leading-relaxed text-ink-muted">
           <p>{profile.bio}</p>
           <p>
-            This site is a blog. If something here is useful, feel free to get
-            in touch.
+            I keep a log here of projects I am working on: explanations,
+            experiments, and what I learn along the way. If something is useful,
+            feel free to get in touch.
           </p>
         </div>
       </div>
