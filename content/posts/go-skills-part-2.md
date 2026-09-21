@@ -287,4 +287,4 @@ If an instruction remains necessary across repeated tasks, it may be worth encod
 
 The goal is still not to make Claude write better Go. It is to stop explaining the same engineering decisions every time you start a new session. After this run I would put the test checklist in the skill, and leave the architecture in `CLAUDE.md` and the code.
 
-Both implementations pass their tests. That still does not tell me how they behave at runtime. That is next.
+Both implementations pass their tests. That still does not tell me how they behave at runtime. [Part 3](/blog/go-skills-part-3) is that investigation.
