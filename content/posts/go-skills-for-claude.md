@@ -1,7 +1,7 @@
 ---
 title: "Skills, part 1: teaching Claude how your team writes Go"
 date: 2026-09-21
-excerpt: "Skills are not about making Claude a better Go developer. They are about making your engineering decisions reusable."
+excerpt: "The goal is not to make Claude write better Go. It is to stop explaining the same engineering decisions every time you start a new session."
 tags:
   - go
   - claude
@@ -16,11 +16,9 @@ Every new session I found myself repeating the same review comments: propagate `
 
 Skills gave me a way to turn those repeated comments into reusable instructions Claude can load when the task matches.
 
-This is part 1 of a short series. Here I stay on the floor: what a skill is, when it beats `CLAUDE.md`, how to write a small one for a Go service, and how to tell if it actually helped. The next part is the denser setup — more skills, then agents, then something I would ship.
+**The goal is not to make Claude write better Go. It is to stop explaining the same engineering decisions every time you start a new session.**
 
-**Skills are not about making Claude a better Go developer. They are about making your engineering decisions reusable.**
-
-## Claude knows Go. It does not know your project.
+## Claude knows Go. It does not know your project
 
 If you already use Claude Code on a backend, you have seen some version of this:
 
@@ -75,13 +73,6 @@ Where you put the folder decides who sees it:
 | Project | `.claude/skills/<name>/SKILL.md` | This repo |
 | Plugin | a marketplace plugin's `skills/` | Wherever that plugin is enabled |
 
-```mermaid
-flowchart LR
-  personal["~/.claude/skills/"] --> claude[Claude]
-  project[".claude/skills/"] --> claude
-  plugin[Marketplace plugin] --> claude
-```
-
 A generic Go skill that only says "use `%w`" is usually a weak one. Any current model already knows that. The skill worth writing encodes **this repo**.
 
 ## Skills vs CLAUDE.md
@@ -90,14 +81,16 @@ If you already use Claude Code, this is the first question: why not put everythi
 
 Because they solve different jobs.
 
-| CLAUDE.md | Skills |
+| Need | Tool |
 | --- | --- |
-| Always in context | Loaded when the task matches |
-| What this repo *is* | How to do a *kind of change* |
-| Layout, stack, always-on commands | A procedure: endpoint, migration, review |
-| Short, stable facts | Longer checklists you do not want on every YAML tweak |
+| Describe the architecture of the repo | `CLAUDE.md` |
+| State conventions that should always hold | `CLAUDE.md` |
+| Apply a procedure for a kind of change | Skill |
+| Run a deterministic check | Scripts, tests, linters |
 
-`CLAUDE.md`:
+`CLAUDE.md` is always in context. A skill is loaded when the task matches. Dump the HTTP playbook into `CLAUDE.md` and you pay for it on every prompt, including the ones that are not about HTTP.
+
+Facts that should always be true:
 
 ```md
 This is a Go service with PostgreSQL.
@@ -106,7 +99,7 @@ Keep the current package layout: internal/user for domain, internal/httpapi for 
 Run golangci-lint before you consider the change done.
 ```
 
-A skill:
+A procedure you run ten times a month:
 
 ```md
 ---
@@ -124,8 +117,6 @@ When adding an endpoint:
 6. Tests use testify/require, not t.Fatal directly.
 7. Run golangci-lint on the packages you touched.
 ```
-
-Facts that should always be true go in `CLAUDE.md`. A procedure you run ten times a month goes in a skill. If you dump the procedure into `CLAUDE.md`, you pay for it on every prompt, including the ones that are not about HTTP.
 
 Triggering is not a type system. Descriptions misfire. You still glance at whether the skill actually loaded. That is a reason to keep skills few and the `description` specific, not a reason to put the whole playbook in `CLAUDE.md`.
 
@@ -209,6 +200,8 @@ It compiles. It also:
 - logs and returns the same failure
 - has no `ErrNotFound`, so "missing user" and "postgres is down" are both 500
 
+That is the interesting failure mode. Not a syntax error. A design the model cannot infer from `database/sql`.
+
 Then invoke the skill on purpose:
 
 ```text
@@ -218,7 +211,7 @@ Add GET /users/{id}.
 Follow the skill. Do not query from the handler.
 ```
 
-The playbook produces two packages, not one clever function. Service first — note `QueryRowContext` plus `Scan`, which is where `sql.ErrNoRows` actually appears:
+The playbook produces two packages, not one clever function. Service first — `QueryRowContext` plus `Scan`, which is where `sql.ErrNoRows` actually appears:
 
 ```go
 package user
@@ -291,15 +284,7 @@ Focus on handler vs service, domain errors, and duplicated logging.
 Do not modify unrelated code.
 ```
 
-If you would rather start from a public pack instead of writing the first file, this is enough:
-
-```bash
-npx skills add samber/cc-skills-golang --skill golang-error-handling
-```
-
-![Installing a skill with the skills CLI](/images/posts/go-skills/install-terminal.png)
-
-Use that pack for language mechanics. Use a **project** skill for architecture. They are not the same job.
+If you would rather start from a public pack for language mechanics, [samber/cc-skills-golang](https://github.com/samber/cc-skills-golang) exists. Use that for `%w`. Use a **project** skill for architecture. They are not the same job.
 
 ## Did it actually help?
 
@@ -322,50 +307,32 @@ Triggering is not a type system. After a change, check that the skill was actual
 
 If that diff is not cheaper than writing the comment yourself, the skill is the wrong one.
 
-## Finding existing skills
+## Why bother, if you already know Go
 
-You do not have to write the first one. [skills.sh](https://skills.sh) is a directory; GitHub is where the files live. For Go language mechanics I would look at [samber/cc-skills-golang](https://github.com/samber/cc-skills-golang). Install one skill, not the whole tree, until you have seen it fire.
+Because your judgment should survive the session.
 
-```bash
-npx skills add samber/cc-skills-golang --skill golang-error-handling
-```
+You already know the house rules. The cost is re-teaching them every Monday to a model with no memory of last week's review. A project skill is that comment, on disk. You review instead of re-teaching. You still own the diff.
 
-Or, in Claude Code:
+That is also why skills rot.
 
-```text
-/plugin marketplace add samber/cc
-/plugin install cc-skills-golang@samber
-```
+If `internal/httpapi` moves, the skill that names it is now lying. If the team drops `testify`, the skill will keep generating `require.ErrorIs` until someone notices. There is no compiler for `SKILL.md`. A dependency bump, a new logging library, a layout change — none of that updates the file.
 
-Anthropic's examples are at [github.com/anthropics/skills](https://github.com/anthropics/skills). They show the format. They are not a substitute for your package layout.
+Who reviews them? Whoever reviews the code they produce. Treat a project skill as you would a Makefile: it lives in the repo, it changes in a PR, and if it starts shipping the wrong shape, you fix the file. You do not keep pasting a correction into chat.
 
-Skills are not limited to backend work. Hugging Face publishes the same `SKILL.md` format for models, datasets, and the Hub. Useful if that is the task. Irrelevant if you are trying to keep handlers off SQL.
+How do you know it went stale? The diffs stop matching the house rules. Handler SQL comes back. You hear yourself explaining the same comment again. That is the signal. Update the skill or delete it.
 
-Clone works too: copy the skill directory so `SKILL.md` and `references/` stay together, into `~/.claude/skills/` or `.claude/skills/`.
+A vague skill makes the agent confidently wrong, faster. An unused skill is a file. A rotting skill is a machine that re-teaches the wrong architecture.
 
 ## When not to use a skill
 
-A skill is instructions for an agent. It is not enforcement. `gofmt` still formats. `golangci-lint` still fails the CI. `go test` still runs.
-
-| Need | Tool |
-| --- | --- |
-| Format Go | `gofmt` / `gofumpt` |
-| Static checks | `golangci-lint` |
-| Tests | `go test` |
-| What this repo is | `CLAUDE.md` |
-| A repeatable review or implementation procedure | Skill |
-| A deterministic operation | Script or Makefile |
+A skill is instructions for an agent. It is not enforcement.
 
 Do not create a skill to replace a linter. Do not create a skill for a one-off. Do not create a skill that restates the Go spec. Create one when you are tired of pasting the same architectural review comment.
 
-The cons, if you ignore that:
+## Leave with one file
 
-- A vague skill makes the agent confidently wrong, faster.
-- Skills rot when the layout changes and the file does not.
-- You still own the diff.
+Tomorrow, put one project skill next to a handler you actually maintain. Invoke it on purpose once. Then see if Claude loads it on its own.
 
-## What comes next
+The goal is not to make Claude write better Go. It is to stop explaining the same engineering decisions every time you start a new session.
 
-You should be able to leave this page and, tomorrow, put one project skill next to a handler you actually maintain.
-
-Part 2 is the rest of the stack: several skills in the same repo, then agents that use them to build a service rather than a snippet. This part is the floor — one playbook, one endpoint, a diff you can judge.
+Next: more than one skill in the same repo, then agents. This part is one playbook.
