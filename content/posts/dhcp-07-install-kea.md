@@ -29,6 +29,8 @@ flowchart LR
 
 Everything below was run on Debian 12 with Kea 2.2.0. The output is copied from the run, not reconstructed.
 
+If you would rather run it than type it, the whole lab is in [tul1/dhcp-lab](https://github.com/tul1/dhcp-lab) — `./run 01-direct` does exactly what this post walks through, and there are three more scenarios in [post 8](/blog/dhcp-08-debugging).
+
 ## Start the container
 
 ```bash
@@ -188,6 +190,18 @@ tcpdump says **Request** and **Reply**, not DISCOVER and OFFER. Those are the BO
 
 The reply goes to `192.0.2.100.68` — a **unicast to an address the client has not configured yet**. That is the last branch of the decision tree in [post 2](/blog/dhcp-02-the-network-underneath), and it only works because Kea wrote the destination MAC directly into the frame.
 
+## The same thing, scripted
+
+Typing it out once is worth doing. After that:
+
+```bash
+git clone https://github.com/tul1/dhcp-lab
+cd dhcp-lab
+./run 01-direct
+```
+
+Same topology, same config, same output, in one command.
+
 ## Tear it down
 
 ```bash
@@ -201,5 +215,7 @@ The container was started with `--rm`. Namespaces, leases, config and Kea all di
 A working DHCP server is a JSON file and one command. The hard part was never the server.
 
 The lab is worth keeping around, because every concept in this series is now something you can watch rather than read about — and post 8 uses it to break things on purpose.
+
+The scripts are at [tul1/dhcp-lab](https://github.com/tul1/dhcp-lab).
 
 Next: **[Debugging DHCP](/blog/dhcp-08-debugging)**.
