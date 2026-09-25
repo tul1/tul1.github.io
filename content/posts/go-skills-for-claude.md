@@ -8,6 +8,14 @@ tags:
   - skills
 ---
 
+> **What this is.** How to encode a repo's conventions as a Claude Code skill, and how to decide what belongs in one.
+>
+> **What it is not.** Evidence that skills work. That is [part 2](/blog/go-skills-part-2), which runs the same change with and without the file and compares the diffs.
+>
+> **Assumed.** Working Go, a repo that already has conventions, Claude Code installed.
+>
+> **You leave with.** One project skill, and a rule for what to keep out of it.
+
 Claude can write Go. That is not the problem.
 
 The problem is getting it to write Go the way this repo already does.
@@ -47,6 +55,8 @@ The model is not the senior in the room. You are. The question is whether the ag
 
 A skill is a folder of instructions the agent loads when the task matches. The [Agent Skills](https://code.claude.com/docs/en/skills) format is a directory with a `SKILL.md`: YAML frontmatter so Claude knows *when* to use it, and markdown so it knows *what to do*. Extra files (`references/`, scripts) stay off the context window until they are needed.
 
+The format is not exclusive to Claude Code — the same folder works through the API and the Agent SDK. Everything below uses Claude Code because that is where I ran it, and because the slash-command ergonomics matter to the workflow.
+
 ```md
 ---
 name: go-http-endpoint
@@ -74,7 +84,9 @@ flowchart TD
 Two ways to fire it:
 
 1. **Automatically.** You ask for something that matches the description.
-2. **Explicitly.** You type `/go-http-endpoint`. Custom commands and skills have been merged; `.claude/skills/deploy/SKILL.md` is `/deploy`.
+2. **Explicitly.** You type `/go-http-endpoint`. Custom commands and skills have been merged; `.claude/skills/deploy/SKILL.md` is `/deploy`. (True as of Claude Code 2.x. This is the kind of detail that rots — check the docs if your version disagrees.)
+
+One frontmatter field the minimal example above leaves out: `allowed-tools`. A skill whose last step is "run `golangci-lint`" needs `Bash` to be available, and constraining the list is how you stop a formatting playbook from editing files.
 
 Where you put the folder decides who sees it:
 
@@ -92,12 +104,17 @@ If you already use Claude Code, this is the first question: why not put everythi
 
 Because they solve different jobs.
 
-| Need | Tool |
-| --- | --- |
-| Describe the architecture of the repo | `CLAUDE.md` |
-| State conventions that should always hold | `CLAUDE.md` |
-| Apply a procedure for a kind of change | Skill |
-| Run a deterministic check | Scripts, tests, linters |
+| Need | Where it goes | Loaded |
+| --- | --- | --- |
+| Describe the architecture of the repo | `CLAUDE.md` | Always |
+| State conventions that should always hold | `CLAUDE.md` | Always |
+| Apply a procedure for a kind of change | Skill | When the description matches |
+| Do a big read-only sweep without flooding the main context | Subagent | When delegated |
+| Enforce something mechanically, every time, no matter the prompt | Hook | On the tool event |
+| Reach a system the model cannot read from disk | MCP server | On tool call |
+| Run a deterministic check | Scripts, tests, linters | In CI, and in the skill's last step |
+
+The row people skip is the hook. If an instruction must hold *every single time* — "never commit to main", "always `gofmt` after an edit" — a skill is the wrong tool, because a skill is advice the model can decline. A hook is the harness doing it. Put determinism in hooks and CI; put judgement in skills.
 
 `CLAUDE.md` is always in context. A skill is loaded when the task matches. Dump the HTTP playbook into `CLAUDE.md` and you pay for it on every prompt, including the ones that are not about HTTP.
 
@@ -164,9 +181,30 @@ You are implementing a change in this repository, not writing a Go tutorial.
 
 That file is the senior review comment, reusable. It is also a first encoding, not a proof that every bullet will move the next PR.
 
+### Keep `SKILL.md` short, put the long part in `references/`
+
+`SKILL.md` is loaded whole when the skill fires. Everything in it is context you pay for on that task, so the file should be the procedure and nothing else. Detail that is only needed sometimes goes next to it:
+
+```text
+.claude/skills/go-http-endpoint/
+  SKILL.md              # the 7 steps, always read when the skill fires
+  references/
+    testing.md          # the full test matrix, read only when writing tests
+    errors.md           # every sentinel in the repo and its status code
+```
+
+Then point at them from the body, and let the agent decide:
+
+```md
+6. Tests live next to the code. For the full matrix of cases this repo
+   expects, read references/testing.md before writing them.
+```
+
+This is the mechanism people miss. A 400-line `SKILL.md` is not a thorough skill, it is a skill that spends its budget before the agent writes a line.
+
 ## Putting it to work
 
-These snippets are illustrative. They show the conventions the skill is trying to communicate. I did not A/B two logged Claude Code sessions for this post, and I am not going to invent a transcript. They do not claim that Claude without a skill necessarily puts SQL in the handler, drops `r.Context()`, or mishandles errors. [Part 2](/blog/go-skills-part-2) is the measured comparison; the baseline there already followed the existing architecture.
+These snippets show the conventions the skill is trying to communicate. They are not a transcript, and they do not claim Claude necessarily produces the first version. Part 2 is the measured comparison.
 
 ### The task
 
@@ -235,6 +273,16 @@ func (s *Service) Get(ctx context.Context, id string) (*User, error) {
 
 Mapping `sql.ErrNoRows` to `ErrNotFound` is the convention. The handler can then use `errors.Is` without importing `database/sql`. The original driver error is not in that chain. That is a choice this repo made, not something Go requires.
 
+It is also a choice worth making on purpose, because Go gives you both. Since 1.20 `fmt.Errorf` accepts more than one `%w`:
+
+```go
+return nil, fmt.Errorf("get user %s: %w: %w", id, ErrNotFound, err)
+```
+
+Now `errors.Is(err, ErrNotFound)` is true *and* `errors.Is(err, sql.ErrNoRows)` is true. The handler still maps one sentinel to 404; the log still has the driver error. The cost is that "not found" is permanently welded to one storage failure, so a future in-memory implementation returns an error that claims `sql.ErrNoRows`.
+
+Pick one and write it down. This repo drops the driver error, because `sql.ErrNoRows` carries nothing a 404 needs. That sentence is exactly the kind of decision a skill exists to stop re-litigating.
+
 Handler only translates:
 
 ```go
@@ -281,7 +329,7 @@ func TestGet_notFound(t *testing.T) {
 | Tests | `testing` helpers at random | `require.ErrorIs` |
 | Lint | Missing | `golangci-lint run` on touched packages |
 
-The table is a map of the conventions, not a measured before-and-after. Whether Claude needed the file for the architecture is an empirical question. [Part 2](/blog/go-skills-part-2) is that measurement: on a tidy repo, the baseline already kept SQL out of the handler. The playbook's lasting value there was the implementation and verification procedure, not restating the layout.
+The table is a map of the conventions, not a measured before-and-after. Whether Claude needed the file for any of it is an empirical question, and the answer turns out to be uncomfortable: on a tidy repo, most of this column is free.
 
 The examples also do not prove the query is correct, that the handler is safe to expose, or that the tests cover a closed database. That is still review.
 
@@ -323,7 +371,19 @@ mkdir -p .claude/skills/go-http-endpoint
 
 Paste the `SKILL.md` from above. Start Claude Code in the repo (`claude`), then run `/skills`. The skill should appear in the list. If it does not, the usual mistake is a file at `.claude/skills/go-http-endpoint.md` instead of `.claude/skills/go-http-endpoint/SKILL.md`.
 
-Invoke it once on purpose with `/go-http-endpoint`. In Claude Code you can also see it load. Then see whether it fires on its own from the description.
+Invoke it once on purpose with `/go-http-endpoint`. Then see whether it fires on its own from the description.
+
+### When it does not fire
+
+This is the first real friction, and "check that it loaded" is not advice. Work down this list:
+
+1. **Is it listed?** Run `/skills`. If the skill is absent, it is a path problem, not a description problem. Stop here.
+2. **Did it load on this turn?** Claude Code shows the skill in the transcript when it fires. If you asked for an endpoint and nothing loaded, the description did not match.
+3. **Read your description as the only thing the model sees.** Until the skill fires, the body does not exist. `description: "Go conventions"` matches nothing, because the model is matching your prompt against that sentence alone. Name the trigger in the user's words: the paths, the verbs, the route prefix.
+4. **Invoke it explicitly and compare.** If `/go-http-endpoint` produces the diff you wanted and the plain prompt does not, the file is fine and the description is wrong. Those are different bugs with different fixes.
+5. **Check for competition.** Two skills with overlapping descriptions will trade off unpredictably. Fewer, sharper skills beat more, vaguer ones.
+
+The description is the API of a skill. It is the part you will rewrite most, and the part that gets the least attention.
 
 The [Agent Skills docs](https://code.claude.com/docs/en/skills) cover the rest of the layout. If you want a public pack for language mechanics, [samber/cc-skills-golang](https://github.com/samber/cc-skills-golang) exists. Use that for `%w`. Use a **project** skill for architecture. They are not the same job.
 
@@ -357,6 +417,30 @@ Creating a skill is iterative:
 Pick a recurring change in a repo you actually maintain. Write down what the last two similar diffs and `CLAUDE.md` already show. Put only the rest in a project skill and invoke it on purpose once.
 
 That is how you create the file. It is not how you know the file is worth keeping. The skill in this post is step 2. [Part 2](/blog/go-skills-part-2) is step 3: the same kind of change, measured, with the codebase and `CLAUDE.md` already in context.
+
+For the record, this is what step 4 did to the file above once the measurement was in. Six of the eight rules were already in the code and `CLAUDE.md`, so they went:
+
+```md
+---
+name: go-http-endpoint
+description: "Use when adding or changing a route in this Go service — handlers in internal/httpapi, service methods in internal/user, or a new domain error that needs an HTTP status."
+allowed-tools: Read, Edit, Bash(go test:*), Bash(golangci-lint:*)
+---
+
+Read the most recent handler in internal/httpapi before writing anything.
+The layout, the wrapping style, and the logging rule are in the code and CLAUDE.md.
+This file is only the part the code does not show you:
+
+1. New sentinel goes next to the existing ones in internal/user, and is mapped
+   in writeError. Nowhere else.
+2. Every new service method gets a closed-database test. Copy the shape of
+   TestGetDatabaseFailure. This is the one that gets skipped.
+3. States Create cannot produce must be inserted with SQL in the test package.
+4. Run golangci-lint run ./internal/user/... ./internal/httpapi/... and report
+   the real output. Do not claim a pass you did not run.
+```
+
+Shorter, and the only file I would still be maintaining a year from now. Get there by deleting, not by drafting it right the first time.
 
 On a tidy repo the architecture may already be in the code. A skill that restates it will not move the PR. The instructions worth maintaining are the ones that still change the work.
 

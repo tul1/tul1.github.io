@@ -8,6 +8,14 @@ tags:
   - skills
 ---
 
+> **The question.** Does a skill improve the diff when Claude already has the codebase and a real `CLAUDE.md`?
+>
+> **The answer, n=1.** It did not save the architecture — the repo already had one. It changed which tests got written.
+>
+> **The caveat that matters.** One run per arm, and the two arms differ by more than the skill. Both are spelled out below.
+>
+> **You leave with.** A method for deciding which bullets of your own skill to delete.
+
 [Part 1](/blog/go-skills-for-claude) encoded a first skill: architecture, layout, and Go implementation rules. This one asks which of those instructions were worth keeping once the repo already had conventions on disk.
 
 Same model. Same feature. Same starting commit. One run with `CLAUDE.md` and the existing code. One run with a project skill on top. Then I read both diffs the way I would read two pull requests.
@@ -80,7 +88,7 @@ Expected behaviour, frozen before either run:
 
 This is not a Cursor chat with a pasted prompt. Skills here are [Claude Code skills](https://code.claude.com/docs/en/skills). Pretending a Cursor rule is the same thing would be lying about the experiment.
 
-It is also not an A/B of the same prompt with one boolean flipped. The baseline session could not load skills (`--disable-slash-commands`). The skill session started with `/implement-go-endpoint`, which inlined the playbook before the agent wrote code. I am comparing two development workflows: codebase plus `CLAUDE.md`, versus that plus an explicit procedure.
+It is also not an A/B of the same prompt with one boolean flipped. The baseline worktree sat on the fixture commit, which does not contain the skill at all — there was nothing on disk to load, and `--disable-slash-commands` was belt and braces on top of that. The skill session started with `/implement-go-endpoint`, which inlined the playbook before the agent wrote code. I am comparing two development workflows: codebase plus `CLAUDE.md`, versus that plus an explicit procedure.
 
 ```mermaid
 flowchart TD
@@ -112,6 +120,22 @@ Implement PATCH /subscriptions/{id}/cancel.
 Claude Code did load it. The session expanded `/implement-go-endpoint` into the `SKILL.md` body before the agent wrote code. If that had not happened, the run would have been invalid.
 
 n = 1. Sampling noise is real. I am not going to pretend this is a benchmark.
+
+### The control I did not run
+
+Two things differ between these arms, not one: the skill **mechanism**, and the **twelve-step procedure** the skill happens to contain. This design cannot separate them. If the skill tree wins, I cannot tell you whether that is because skills work or because checklists work.
+
+The arm that would settle it is cheap, and it is the first thing I would add:
+
+| Arm | Prompt | Isolates |
+| --- | --- | --- |
+| A | feature request only | what the repo alone communicates |
+| B | feature request, `/implement-go-endpoint` | what I actually ran |
+| **C** | **feature request with the `SKILL.md` body pasted inline** | **the procedure, without the skill machinery** |
+
+If B and C produce the same diff, a skill adds nothing a prompt could not — and its whole value is that you do not have to paste it, it is versioned with the repo, and the next person on the team gets it for free. That is still a real argument for skills. It is a much narrower one than "skills improve the output", and I would rather publish the narrow claim than imply the wide one.
+
+I have not run C. Read everything below as measuring *the procedure plus the mechanism*, because that is what it measures.
 
 ## The skill
 
@@ -225,11 +249,47 @@ The baseline already followed these, because `CLAUDE.md` and the existing code a
 
 Restating standing rules in the skill did not distinguish the two diffs. **A skill that duplicates what the repo already communicates is context you are paying for twice.** A skill that captures a procedure the code and `CLAUDE.md` do not already show — the forgotten test, the fixture `Create` cannot produce — is the one I would keep.
 
+Part 1 asserted that cost without measuring it, so here it is for this repo:
+
+| File | Bytes | Words | ≈ tokens |
+| --- | --- | --- | --- |
+| `CLAUDE.md` | 2 672 | 371 | ~670 |
+| `.claude/skills/implement-go-endpoint/SKILL.md` | 3 705 | 534 | ~930 |
+
+(Token column is bytes÷4, the usual English rule of thumb, not a tokenizer run.)
+
+The playbook is 1.4× the size of `CLAUDE.md`. Folding it in would take the always-on budget from ~670 to ~1 600 tokens — on every prompt in the repo, including `go mod tidy` and "why is this test flaky". As a skill it costs that only on endpoint work. That is the actual trade, and it is smaller than people imply: ~900 tokens is not the reason to choose one over the other at this scale. The reason is that half those bullets were dead weight in *both* places.
+
 ## Would I keep this skill in a real repo?
 
 For a service this small, barely. Two example endpoints already taught the architecture. The unique value on this run was a test checklist the baseline skipped.
 
 Keep it if the team still pastes the same review comments after `CLAUDE.md` exists: "you forgot the closed-DB test", "expired has to be inserted, not created", "map the sentinel in `writeError`." Delete the bullets that only restate the house rules. Do not put `ErrConflict` in the file unless that is actually the name this package uses.
+
+So: twelve steps in, four steps out. This is the whole file after the measurement, and the only version I would defend in a code review:
+
+```md
+---
+name: implement-go-endpoint
+description: "Use when adding or changing a route in this subscriptions API — handlers in internal/httpapi, service methods in internal/subscription, or a new domain error that needs an HTTP status."
+allowed-tools: Read, Edit, Bash(go test:*), Bash(go vet:*)
+---
+
+Read internal/httpapi/subscriptions.go and internal/subscription/service.go first.
+The layout, the error wrapping, and the logging rule are already in that code and in
+CLAUDE.md. Do not restate them. This file is only what the code does not show you:
+
+1. A new sentinel goes next to ErrNotFound in internal/subscription and is mapped in
+   writeError. Name it after the rule it breaks, not after the HTTP status.
+2. Every new service method gets a closed-database test. Copy TestGetDatabaseFailure.
+   This is the one that gets skipped.
+3. States Create cannot produce (expired) are inserted with SQL in the test package.
+4. Assert the new status codes at the HTTP layer too, not only in the service.
+5. Run `go test -p 1 ./internal/subscription ./internal/httpapi` and paste the real
+   output. Do not claim a pass you did not run.
+```
+
+Step 1 lost its `ErrConflict` example on purpose — that example is what produced the worse name. Step 4 is new: it is the case both agents missed, and I only know it was missed because I froze the expected behaviour before the runs.
 
 A rotting skill is worse than no skill. This one would keep teaching `ErrConflict` after the team had already picked `ErrInvalidTransition`.
 
