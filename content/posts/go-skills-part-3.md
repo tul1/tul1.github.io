@@ -41,7 +41,7 @@ func (s *Server) cancelSubscription(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-`cmd/api` opens Postgres with `sql.Open("pgx", dsn)`, pings, serves. No `pprof` endpoint. No metrics registry. Request logs come from middleware: method, path, status, duration. Handlers do not log the error they already mapped. That was a house rule in [part 1](/blog/go-skills-for-claude), and the generated server followed it.
+`cmd/api` opens Postgres with `sql.Open("pgx", dsn)`, pings, serves. No `pprof` endpoint. No metrics registry. Request logs come from middleware: method, path, status, duration. Handlers do not log the error they already mapped. That was a house rule in [part 1](/blog/go-skills-part-1), and the generated server followed it.
 
 This API is small on purpose. `GET /subscriptions/{id}` is a primary-key lookup. A successful cancel is one conditional `UPDATE … RETURNING`. If the interesting result is "there is nothing to profile," that is still a result. I did not plant a sleep, a JSON bomb, or an N+1 to give `pprof` something to point at.
 

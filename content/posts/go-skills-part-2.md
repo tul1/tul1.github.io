@@ -16,7 +16,7 @@ tags:
 >
 > **You leave with.** A method for deciding which bullets of your own skill to delete.
 
-[Part 1](/blog/go-skills-for-claude) encoded a first skill: architecture, layout, and Go implementation rules. This one asks which of those instructions were worth keeping once the repo already had conventions on disk.
+[Part 1](/blog/go-skills-part-1) encoded a first skill: architecture, layout, and Go implementation rules. This one asks which of those instructions were worth keeping once the repo already had conventions on disk.
 
 Same model. Same feature. Same starting commit. One run with `CLAUDE.md` and the existing code. One run with a project skill on top. Then I read both diffs the way I would read two pull requests.
 
@@ -46,7 +46,7 @@ internal/httpapi        # handlers, writeError, slog middleware
 
 `POST /subscriptions` and `GET /subscriptions/{id}` were already there. Statuses: `active`, `cancelled`, `expired`. Creates start `active`. `expired` exists so "already cancelled" and "this state cannot be cancelled" are two 409s.
 
-`CLAUDE.md` states standing rules. It does **not** contain the endpoint playbook. That split is the whole point of [part 1](/blog/go-skills-for-claude): facts stay in `CLAUDE.md`, a procedure for one kind of change belongs in a skill.
+`CLAUDE.md` states standing rules. It does **not** contain the endpoint playbook. That split is the whole point of [part 1](/blog/go-skills-part-1): facts stay in `CLAUDE.md`, a procedure for one kind of change belongs in a skill.
 
 Handlers already look like this:
 
