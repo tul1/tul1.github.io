@@ -8,6 +8,14 @@ tags:
   - skills
 ---
 
+> **The finding.** The generated API shipped with `database/sql`'s default idle pool, and no test the agent could have written would have caught it. One line took GET p99 from 302 ms to 5.4 ms.
+>
+> **The method.** Sequential benches → count the round trips → concurrent load → `sql.DB.Stats()` → pprof → change one thing → remeasure.
+>
+> **The uncomfortable part.** The fix made p50 *worse*, and that is the correct outcome.
+>
+> **You leave with.** A reason to distrust a green test suite as evidence that generated code can take traffic.
+
 [Part 2](/blog/go-skills-part-2) ran the same cancel endpoint twice in Claude Code. Both diffs compiled. Both passed `go test`. I read them as pull requests. I did not run them as a service.
 
 That was the hole. Passing tests means the tests you wrote passed. It does not tell you what the process does once it is answering requests.
@@ -76,7 +84,7 @@ ok  .../internal/httpapi        0.650s
 ok  .../internal/subscription   0.592s
 ```
 
-Sequential service benches, `go test -count=5 -benchmem`, median of five:
+Sequential service benches, `go test -count=5 -benchmem`, median of five. (Medians by hand here; where I compare two variants later in this post I use [`benchstat`](https://pkg.go.dev/golang.org/x/perf/cmd/benchstat), which is what you should reach for — it reports the spread and a p-value instead of asking you to eyeball five numbers.)
 
 | Bench | ns/op | B/op | allocs/op |
 | --- | ---: | ---: | ---: |
@@ -185,15 +193,104 @@ Two things did not match the write-up.
 
 p50 got worse. GET went from 408 µs to 2.4 ms. That is not a measurement error. Before the change, most requests reused one of the two warm connections and were fast; the ones that paid for `connectOne` became the tail. After the change, all 50 workers stay busy against Postgres. Little's law on the new throughput is `50 / 19258 ≈ 2.6 ms` mean, which is the new p50. The reconnect tax disappeared. The service now actually delivers 50 concurrent queries, and this Postgres on localhost is the thing they wait on.
 
+Which raises the question I did not answer: at 19k rps, what is the limit — the Go process, or Postgres? Little's law tells me the 2.6 ms is queueing somewhere, not that it is queueing in the database. The sequential bench says a single `GET` is 69 µs, so 50 concurrent requests at 2.6 ms each are spending roughly 37× the uncontended cost waiting for something. Finding out which side that is would mean looking at `pg_stat_activity` during the run and at the embedded instance's `shared_buffers` and `max_connections`, which are defaults I never touched. I stopped at "the churn is gone" because that was the hypothesis under test. The next bottleneck is unidentified, and I would rather say so than name it from the shape of the graph.
+
 p99 did not fall to "tens to hundreds of microseconds." It fell to a few milliseconds. Claude overstated the landing zone. It did not overstate the cause.
 
-Cancel conflict stayed about 1.8× GET at p50 (4.3 ms vs 2.4 ms). Once the pool stopped lying, the extra query was visible again. It is still not why anyone would page. I did not collapse it. Claude said not to, and the numbers agreed.
+Cancel conflict stayed about 1.8× GET at p50 (4.3 ms vs 2.4 ms). Once the pool stopped lying, the extra query was visible again. It is still not why anyone would page, and it was right not to touch it first — but it is now the largest remaining thing in the code, so it gets its own measurement below.
 
 I also did not add `SetMaxOpenConns`. `WaitCount` is still 0. Putting a cap in to look production-ready would be a different experiment.
 
 50 idle connections is 50 Postgres backends. For this fixture, at this concurrency, that is the size that falsified the churn. On a real service I would set it from expected concurrency and `max_connections`, not from a blog-post load of 50. The line in `main.go` is the experiment's conclusion, not a universal constant.
 
 Existing tests still pass after the change. Sequential benches were not re-run as a before/after: a single-goroutine `testing.B` never hit the idle cap, so it would have been theatre.
+
+### The pool fix is not finished
+
+`SetMaxIdleConns(50)` alone is the experiment's conclusion, not a production setting. Two lines are still missing from `main.go`, and their absence is the kind of thing that only shows up during an incident:
+
+```go
+db.SetMaxIdleConns(50)
+db.SetConnMaxLifetime(5 * time.Minute)  // survive a failover
+db.SetConnMaxIdleTime(1 * time.Minute)  // give backends back when idle
+```
+
+Before this change the pool churned so hard that no connection lived long enough to matter. After it, 50 connections are pinned open indefinitely. A Postgres restart, a failover, or a proxy that drops idle sockets leaves you holding 50 handles to something that is gone, and every one of them fails once before the pool replaces it. `SetConnMaxLifetime` bounds that. `SetConnMaxIdleTime` stops a service that saw one spike at 03:00 from holding 50 backends until Tuesday.
+
+I did not measure either, because an 8-second load test cannot see them. That is the honest shape of it: I found the idle cap by measuring, and I know about the lifetime because I have been paged by it. Both belong in the file. Only one of them is in this post's data.
+
+### Why `database/sql` at all?
+
+The bug was a `database/sql` default, and the driver underneath is pgx, which has its own pool. Worth saying out loud: `pgxpool.New` would not have had this failure mode. Its defaults are built for Postgres rather than for every driver ever written, and it exposes `MinConns` / `MaxConns` instead of an idle cap that silently discards connections.
+
+What you give up is the `database/sql` interface — `*sql.DB`, `sql.ErrNoRows`, and every library that takes one. This repo maps `sql.ErrNoRows` in exactly one place, so the switch would be small; on a larger service it is not. I kept `database/sql` because changing it would have replaced the thing I was trying to measure. If I were starting this service today, knowing it would only ever talk to Postgres, I would start with `pgxpool`.
+
+## Collapsing the second query
+
+Now that the pool is honest, the extra query on Cancel's miss path is measurable again — and it is the same defect as the race [part 2](/blog/go-skills-part-2) described. Two statements mean two snapshots, so the row the classifier reads is not necessarily the row the `UPDATE` failed against.
+
+One statement fixes both. A data-modifying CTE does the transition and the classification together:
+
+```sql
+WITH target AS (
+    SELECT id, customer_id, plan, status, created_at
+    FROM subscriptions WHERE id = $1
+), upd AS (
+    UPDATE subscriptions SET status = $2
+    WHERE id = $1 AND status = $3
+    RETURNING id, customer_id, plan, status, created_at
+)
+SELECT id, customer_id, plan, status, created_at, true  AS cancelled FROM upd
+UNION ALL
+SELECT id, customer_id, plan, status, created_at, false FROM target
+WHERE NOT EXISTS (SELECT 1 FROM upd)
+```
+
+Three outcomes, one round trip, and the result carries the meaning: one row with `cancelled = true` is the transition, one row with `cancelled = false` is a conflict *and tells you the status*, zero rows is a 404.
+
+```go
+err := s.db.QueryRowContext(ctx, cancelSQL, id, StatusCancelled, StatusActive).
+    Scan(&sub.ID, &sub.CustomerID, &sub.Plan, &sub.Status, &sub.CreatedAt, &cancelled)
+switch {
+case errors.Is(err, sql.ErrNoRows):
+    return nil, fmt.Errorf("cancel subscription %s: %w", id, ErrNotFound)
+case err != nil:
+    return nil, fmt.Errorf("cancel subscription %s: %w", id, err)
+case !cancelled:
+    return nil, fmt.Errorf("cancel subscription %s (status %s): %w", id, sub.Status, ErrConflict)
+}
+```
+
+Note the `status %s` in the conflict wrap. The two-query version scanned that column and discarded it — part 2 flagged that as the thing to fix, and here it falls out of the query for free.
+
+The `QueryTracer` confirms one round trip on all three paths, where the old code needed two on both misses:
+
+```text
+CTE round trips: success=1 conflict=1 notfound=1
+```
+
+32 goroutines cancelling the same active row, `-race`: `success=1 conflict=31 other=0`, row ends `cancelled`. Same guarantee as before, now in a single statement.
+
+And the cost, via `benchstat`, n=6, same embedded Postgres:
+
+```text
+                  │  two queries │             one query              │
+                  │    sec/op    │   sec/op     vs base               │
+CancelConflict-10   131.29µ ± 6%   70.44µ ± 2%  -46.35% (p=0.002 n=6)
+CancelNotFound-10   130.47µ ± 0%   68.45µ ± 1%  -47.54% (p=0.002 n=6)
+geomean              130.9µ        69.44µ       -46.94%
+
+                  │  two queries │            one query               │
+                  │  allocs/op   │ allocs/op   vs base                │
+CancelConflict-10     54.00 ± 0%   48.00 ± 0%  -11.11% (p=0.002 n=6)
+CancelNotFound-10     52.00 ± 0%   38.00 ± 0%  -26.92% (p=0.002 n=6)
+```
+
+A cancel miss now costs 69 µs, which is what a `GET` costs in the table at the top of this post. That is the tell that the number is real rather than a lucky run: removing one round trip put a two-round-trip operation exactly onto the one-round-trip baseline.
+
+One honesty note, because a CTE tempts you to overclaim. All sub-statements of a data-modifying CTE share one snapshot, so `target` reads the row as of statement start. If a concurrent transaction cancels the row while this statement runs, the `UPDATE` correctly fails its `status = 'active'` re-check and you correctly get a 409 — but the status *label* in the error can be the pre-statement value. The HTTP response is right. The log line can be one version stale. That is a better trade than two statements, not a free lunch.
+
+I did not merge this into the Part 3 branch. It changes the behaviour of the generated code, and this post is about understanding what the agent produced. But if I were reviewing that PR for real, this is the comment I would leave — and it is the one no test the agent wrote could have prompted. `go test` passed on the two-query version, because correctness was never the problem.
 
 ## What I would do differently tomorrow
 
