@@ -92,9 +92,9 @@ flowchart TD
 
 ## The lab
 
-Posts 7 and 8 build a lab you can run on one Linux machine: a client, a server, and a router, each in its own network namespace, with no virtual machines and no cloud account. Several of the earlier posts use it too, for captures I would rather show than describe.
+Posts 7 and 8 build a lab you can run anywhere Docker runs: a client, a server, and a router, each in its own network namespace, with no virtual machines and no cloud account. Several of the earlier posts use it too, for captures I would rather show than describe.
 
-It is a handful of `ip netns` commands. I will publish the script with post 7.
+It is a handful of `ip netns` commands wrapped in a container, so the only thing you need installed is Docker. The scripts are at [tul1/dhcp-lab](https://github.com/tul1/dhcp-lab).
 
 ## Where to start
 

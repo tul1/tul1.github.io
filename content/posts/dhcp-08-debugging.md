@@ -14,6 +14,15 @@ DHCP is unusually pleasant to debug once you have a method, because the protocol
 
 Everything below was reproduced in the lab from [post 7](/blog/dhcp-07-install-kea), extended with a relay. The log lines are copied from the runs.
 
+Each failure is a scenario in [tul1/dhcp-lab](https://github.com/tul1/dhcp-lab), so you can break it yourself rather than take my word for the output:
+
+```bash
+git clone https://github.com/tul1/dhcp-lab && cd dhcp-lab
+./run 02-relay            # a relay working, so you know what good looks like
+./run 03-no-subnet        # failure 1 below
+./run 04-pool-exhausted   # failure 2 below
+```
+
 ## Ask this first
 
 **Did the server see the packet?**
@@ -81,7 +90,7 @@ That is `giaddr` from [post 4](/blog/dhcp-04-relays). It is how the server picks
 
 The relay works perfectly, the server receives everything, and the client gets nothing. This is the one that looks like a mystery.
 
-Reproduced by pointing the relay at a server whose only subnet is `203.0.113.0/24` while clients live in `192.0.2.0/24`. The relay forwarded three requests. Kea allocated zero. The client stayed at no address.
+Reproduced by pointing the relay at a server whose only subnet is `203.0.113.0/24` while clients live in `192.0.2.0/24` — `./run 03-no-subnet`. The relay forwarded every request. Kea allocated zero. The client stayed at no address.
 
 The server log is completely explicit:
 
@@ -99,7 +108,7 @@ This is the failure worth memorising, because the symptom — total silence at t
 
 ## Failure 2: the pool is empty
 
-Reproduced with a pool of exactly one address and two clients. The first got `192.0.2.100`. The second got nothing. Kea allocated one lease total.
+Reproduced with a pool of exactly one address and two clients — `./run 04-pool-exhausted`. The first got `192.0.2.100`. The second got nothing. Kea allocated one lease total.
 
 ```text
 INFO [kea-dhcp4.leases] DHCP4_LEASE_ALLOC ...: lease 192.0.2.100 has been
@@ -173,5 +182,7 @@ Being honest about the limits of a contained lab.
 Ask whether the server saw the packet. That splits every failure cleanly.
 
 Port 67 on both ends means a relay. `failed to select a subnet` means `giaddr` does not match any subnet declaration. Pool exhaustion logs at WARN and is easy to miss. And a server that is running is not necessarily a server that is listening.
+
+The lab is at [tul1/dhcp-lab](https://github.com/tul1/dhcp-lab) if you want to reproduce any of it.
 
 That is the last of the practical posts. Back to the [map](/blog/dhcp-00-the-map), or on to [where the server lives](/blog/dhcp-09-where-it-lives).
